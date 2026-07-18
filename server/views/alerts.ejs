@@ -1,0 +1,85 @@
+<!-- Filters -->
+<div class="bg-panel border border-line rounded-2xl p-4">
+  <form method="get" action="/app/alerts" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Status</label>
+      <select name="status" class="bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+        <option value="">All</option>
+        <% for (const s of statuses) { %>
+          <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+        <% } %>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Severity</label>
+      <select name="severity" class="bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+        <option value="">All</option>
+        <% for (const s of severities) { %>
+          <option value="<%= s %>" <%= filters.severity === s ? 'selected' : '' %>><%= s %></option>
+        <% } %>
+      </select>
+    </div>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition">Apply</button>
+    <a href="/app/alerts" class="px-4 py-2 rounded-xl border border-line text-sm text-slate-400 hover:text-slate-200 hover:bg-panel2 transition">Reset</a>
+  </form>
+</div>
+
+<!-- Alerts table -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold text-white">Alerts</h2>
+    <span class="text-xs text-slate-500"><%= alerts.length %> shown (max 200)</span>
+  </div>
+  <% if (alerts.length === 0) { %>
+    <div class="text-sm text-slate-500 py-10 text-center">No alerts match the current filters.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+            <th class="py-2.5 pr-4 font-medium">Severity</th>
+            <th class="py-2.5 pr-4 font-medium">Title</th>
+            <th class="py-2.5 pr-4 font-medium">Device</th>
+            <th class="py-2.5 pr-4 font-medium">Rule</th>
+            <th class="py-2.5 pr-4 font-medium">Status</th>
+            <th class="py-2.5 pr-4 font-medium">Created</th>
+            <th class="py-2.5 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const a of alerts) { %>
+            <tr class="border-b border-line/50 hover:bg-panel2/60">
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= sevBadge(a.severity) %>"><%= a.severity %></span></td>
+              <td class="py-2.5 pr-4 text-slate-200"><%= a.title %></td>
+              <td class="py-2.5 pr-4"><a class="text-accent hover:underline" href="/app/devices/<%= a.device_id %>"><%= a.hostname %></a></td>
+              <td class="py-2.5 pr-4 text-slate-400 font-mono text-xs"><%= a.rule %></td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= statusBadge(a.status) %>"><%= a.status %></span></td>
+              <td class="py-2.5 pr-4 text-slate-500 text-xs whitespace-nowrap" data-ts="<%= a.created_at %>"><%= a.created_at %></td>
+              <td class="py-2.5">
+                <div class="flex gap-1.5">
+                  <% if (a.status === 'open') { %>
+                    <form method="post" action="/app/alerts/<%= a.id %>/status">
+                      <input type="hidden" name="status" value="ack" />
+                      <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition">Ack</button>
+                    </form>
+                  <% } %>
+                  <% if (a.status !== 'resolved') { %>
+                    <form method="post" action="/app/alerts/<%= a.id %>/status">
+                      <input type="hidden" name="status" value="resolved" />
+                      <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition">Resolve</button>
+                    </form>
+                  <% } else { %>
+                    <form method="post" action="/app/alerts/<%= a.id %>/status">
+                      <input type="hidden" name="status" value="open" />
+                      <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/30 hover:bg-slate-500/20 transition">Reopen</button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

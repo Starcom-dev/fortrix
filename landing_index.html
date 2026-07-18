@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortrix — Stop Hackers Before Your Data Leaves</title>
+    <style>
+        :root {
+            --bg: #0a0c10;
+            --card: #11151d;
+            --border: #1c2233;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.18);
+            --text: #d1d5db;
+            --text-dim: #6b7280;
+            --text-bright: #f3f4f6;
+            --gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Grid background */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* NAV */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .nav-cta {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none;
+        }
+
+        .nav-cta:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent);
+        }
+
+        /* HERO */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 0.8125rem;
+            color: var(--text-dim);
+            margin-bottom: 32px;
+        }
+
+        .hero-badge .dot {
+            width: 7px;
+            height: 7px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            color: var(--text-bright);
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--text-bright);
+        }
+
+        /* GLOBE / VISUAL */
+        .visual {
+            display: flex;
+            justify-content: center;
+            padding: 0 0 80px;
+        }
+
+        .globe {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 35% 35%, rgba(59, 130, 246, 0.2) 0%, transparent 55%),
+                radial-gradient(circle, rgba(17, 21, 29, 0.8) 0%, var(--bg) 100%);
+            border: 1px solid var(--border);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 100px rgba(59, 130, 246, 0.08);
+        }
+
+        .globe::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.2), transparent);
+            mask: radial-gradient(circle, transparent 60%, black 61%);
+            -webkit-mask: radial-gradient(circle, transparent 60%, black 61%);
+            animation: rotate 12s linear infinite;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .globe-content {
+            z-index: 1;
+            text-align: center;
+        }
+
+        .globe-icon {
+            font-size: 4rem;
+            margin-bottom: 8px;
+        }
+
+        .globe-text {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        /* FEATURES */
+        .features {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .features-sub {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 56px;
+            font-size: 1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 24px rgba(59, 130, 246, 0.06);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            color: var(--text-bright);
+            font-size: 1.0625rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--text-dim);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        /* THREAT TYPES */
+        .threats {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .threats h2 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 48px;
+            letter-spacing: -0.02em;
+        }
+
+        .threat-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .threat-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .threat-item .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .threat-item .indicator.red { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+        .threat-item .indicator.amber { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+        .threat-item .indicator.blue { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+
+        .threat-item strong {
+            display: block;
+            color: var(--text-bright);
+            font-size: 0.875rem;
+            margin-bottom: 2px;
+        }
+
+        .threat-item span {
+            color: var(--text-dim);
+            font-size: 0.8125rem;
+        }
+
+        /* CTA */
+        .cta-section {
+            padding: 80px 0;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .cta-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 64px 48px;
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+        }
+
+        .cta-card h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 16px;
+        }
+
+        .cta-card p {
+            color: var(--text-dim);
+            max-width: 500px;
+            margin: 0 auto 32px;
+            font-size: 1rem;
+        }
+
+        /* FOOTER */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 0.8125rem;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 768px) {
+            .hero { padding: 60px 0 40px; }
+            .globe { width: 200px; height: 200px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cta-card { padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <div class="container">
+        <!-- NAV -->
+        <nav class="nav">
+            <div class="logo">
+                <div class="logo-icon">⟡</div>
+                Fortrix
+            </div>
+            <a href="#" class="nav-cta" onclick="openLeadModal(event)">Request Early Access</a>
+        </nav>
+
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                Endpoint Protection Platform
+            </div>
+            <h1>
+                Hackers Are Silent.<br>
+                <span>Your Data Is the Target.</span>
+            </h1>
+            <p>
+                Modern hackers don't crash your computer — they quietly take control, 
+                copy your files, steal your credentials, and vanish without a trace. 
+                Fortrix detects the intrusion and blocks your data from ever leaving.
+            </p>
+            <div class="hero-actions">
+                <a href="#" class="btn-primary" onclick="openLeadModal(event)">Get Protected</a>
+                <a href="#features" class="btn-secondary">Learn More ↓</a>
+            </div>
+        </section>
+
+        <!-- VISUAL -->
+        <div class="visual">
+            <div class="globe">
+                <div class="globe-content">
+                    <div class="globe-icon">🛡️</div>
+                    <div class="globe-text">Always Watching</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURES -->
+        <section class="features" id="features">
+            <h2>Built for the Real Threat</h2>
+            <p class="features-sub">Your firewall won't stop an AI agent from reading your files. Fortrix will.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📤</div>
+                    <h3>Data Exfiltration Detection</h3>
+                    <p>Monitor outbound traffic patterns. Flag burst file reads, clipboard scraping, 
+                    and data sent to unknown IPs — in real time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Behavioral AI Engine</h3>
+                    <p>Not signature-based. Local AI learns normal behavior per device and flags 
+                    anomalies. No cloud dependency, no data leaves your network.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Anti AI-Agent Hardening</h3>
+                    <p>Detect and block rogue AI tools, remote access trojans, and unauthorized 
+                    screen capture — the attack vectors signature-based tools miss.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Ransomware Shield</h3>
+                    <p>Behavior-based ransomware detection stops encryption before it starts. 
+                    Automatic file recovery from shadow copies.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Unified Dashboard</h3>
+                    <p>One pane of glass for your entire fleet. Real-time alerts, 
+                    compliance reports, and policy management — on-premise or cloud.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🪟</div>
+                    <h3>Windows + macOS</h3>
+                    <p>Kernel-level protection on Windows via KMDF driver. 
+                    macOS support via Endpoint Security Framework. Full coverage.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- THREATS -->
+        <section class="threats">
+            <h2>What We Protect Against</h2>
+            <div class="threat-list">
+                <div class="threat-item">
+                    <div class="indicator red"></div>
+                    <div>
+                        <strong>AI-Powered Info-Stealers</strong>
+                        <span>Malware disguised as AI tools that silently exfiltrate your documents, credentials, and browsing data.</span>
+                    </div>
+                </div>
+                <div class="threat-item">
+                    <div class="indicator red"></div>
+                    <div>
+                        <strong>Remote Access Trojans (RATs)</strong>
+                        <span>Attackers gain full control of your PC — Fortrix detects abnormal input sources and remote sessions.</span>
+                    </div>
+                </div>
+                <div class="threat-item">
+                    <div class="indicator amber"></div>
+                    <div>
+                        <strong>Clipboard Hijacking</strong>
+                        <span>Cryptocurrency addresses, passwords, and sensitive text stolen from your clipboard in real time.</span>
+                    </div>
+                </div>
+                <div class="threat-item">
+                    <div class="indicator amber"></div>
+                    <div>
+                        <strong>Unauthorized Screen Capture</strong>
+                        <span>Malicious processes taking screenshots of your work — detected and blocked instantly.</span>
+                    </div>
+                </div>
+                <div class="threat-item">
+                    <div class="indicator blue"></div>
+                    <div>
+                        <strong>Data Leaks via AI Chat</strong>
+                        <span>Employees pasting confidential data into ChatGPT and other AI tools — Fortrix flags and alerts.</span>
+                    </div>
+                </div>
+                <div class="threat-item">
+                    <div class="indicator blue"></div>
+                    <div>
+                        <strong>Supply Chain Attacks</strong>
+                        <span>Compromised software updates and dependencies — behavioral analysis catches what signatures miss.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <div class="cta-card">
+                <h2>Ready to Stop Data Theft?</h2>
+                <p>
+                    Fortrix is in active development. Early adopters get priority access 
+                    and lifetime discounted pricing.
+                </p>
+                <a href="#" class="btn-primary" onclick="openLeadModal(event)">Request Early Access</a>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <span>© 2026 Fortrix. All rights reserved.</span>
+            <span>Endpoint Protection Reimagined</span>
+        </footer>
+    </div>
+
+    <!-- LEAD MODAL -->
+    <style>
+        .lead-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(4, 7, 15, 0.78);
+            backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .lead-overlay.open { display: flex; }
+        .lead-modal {
+            width: 100%; max-width: 440px;
+            background: #0d1322;
+            border: 1px solid #1e2742;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        .lead-modal h3 { margin: 0 0 6px; font-size: 20px; color: #fff; }
+        .lead-modal p.lead-sub { margin: 0 0 20px; font-size: 13px; color: #8b93a7; line-height: 1.5; }
+        .lead-close {
+            position: absolute; top: 14px; right: 16px;
+            background: none; border: none; color: #8b93a7;
+            font-size: 22px; line-height: 1; cursor: pointer; padding: 4px;
+        }
+        .lead-close:hover { color: #fff; }
+        .lead-field { margin-bottom: 14px; }
+        .lead-field label { display: block; font-size: 12px; color: #8b93a7; margin-bottom: 6px; }
+        .lead-field input, .lead-field textarea {
+            width: 100%; box-sizing: border-box;
+            background: #0a0e1a;
+            border: 1px solid #1e2742;
+            border-radius: 10px;
+            color: #e2e8f0;
+            font: inherit; font-size: 14px;
+            padding: 10px 12px;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .lead-field input:focus, .lead-field textarea:focus { border-color: #4f6ef7; }
+        .lead-field textarea { resize: vertical; min-height: 72px; }
+        .lead-submit {
+            width: 100%; margin-top: 4px;
+            background: #4f6ef7; color: #fff;
+            border: none; border-radius: 10px;
+            font: inherit; font-size: 14px; font-weight: 600;
+            padding: 12px; cursor: pointer;
+            transition: background .15s, opacity .15s;
+        }
+        .lead-submit:hover { background: #3d5bf5; }
+        .lead-submit:disabled { opacity: .6; cursor: not-allowed; }
+        .lead-msg { margin-top: 12px; font-size: 13px; display: none; text-align: center; }
+        .lead-msg.ok { display: block; color: #34d399; }
+        .lead-msg.err { display: block; color: #f87171; }
+    </style>
+
+    <div class="lead-overlay" id="leadOverlay" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+        <div class="lead-modal">
+            <button type="button" class="lead-close" onclick="closeLeadModal()" aria-label="Close">&times;</button>
+            <h3 id="leadTitle">Request Early Access</h3>
+            <p class="lead-sub">Fortrix is in active development. Leave your details and we'll reach out — early adopters get priority access and lifetime discounted pricing.</p>
+            <form id="leadForm">
+                <div class="lead-field">
+                    <label for="leadName">Name</label>
+                    <input type="text" id="leadName" name="name" maxlength="255" placeholder="Your name">
+                </div>
+                <div class="lead-field">
+                    <label for="leadEmail">Email *</label>
+                    <input type="email" id="leadEmail" name="email" maxlength="255" required placeholder="you@company.com">
+                </div>
+                <div class="lead-field">
+                    <label for="leadCompany">Company</label>
+                    <input type="text" id="leadCompany" name="company" maxlength="255" placeholder="Company (optional)">
+                </div>
+                <div class="lead-field">
+                    <label for="leadMessage">Message</label>
+                    <textarea id="leadMessage" name="message" maxlength="255" placeholder="Anything we should know? (optional)"></textarea>
+                </div>
+                <button type="submit" class="lead-submit" id="leadSubmit">Request Early Access</button>
+                <div class="lead-msg" id="leadMsg"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openLeadModal(e) {
+            if (e) e.preventDefault();
+            document.getElementById('leadOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            setTimeout(function () { document.getElementById('leadEmail').focus(); }, 50);
+        }
+        function closeLeadModal() {
+            document.getElementById('leadOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        document.getElementById('leadOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeLeadModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeLeadModal();
+        });
+        document.getElementById('leadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var btn = document.getElementById('leadSubmit');
+            var msg = document.getElementById('leadMsg');
+            var email = document.getElementById('leadEmail').value.trim();
+            msg.className = 'lead-msg';
+            if (!email || email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+                msg.textContent = 'Please enter a valid email address.';
+                msg.className = 'lead-msg err';
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = 'Sending\u2026';
+            fetch('https://fortrix.xyz/api/v1/lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    name: document.getElementById('leadName').value.trim(),
+                    company: document.getElementById('leadCompany').value.trim(),
+                    message: document.getElementById('leadMessage').value.trim()
+                })
+            }).then(function (res) {
+                if (res.status === 201) {
+                    msg.textContent = "Thanks! You're on the list — we'll be in touch soon.";
+                    msg.className = 'lead-msg ok';
+                    document.getElementById('leadForm').reset();
+                    btn.textContent = 'Request Early Access';
+                    btn.disabled = false;
+                    setTimeout(closeLeadModal, 2500);
+                } else if (res.status === 429) {
+                    throw new Error('Too many requests. Please try again later.');
+                } else {
+                    throw new Error('Something went wrong. Please try again.');
+                }
+            }).catch(function (err) {
+                msg.textContent = err.message || 'Network error. Please try again.';
+                msg.className = 'lead-msg err';
+                btn.textContent = 'Request Early Access';
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

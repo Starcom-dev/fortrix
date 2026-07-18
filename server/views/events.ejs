@@ -1,0 +1,80 @@
+<!-- Filters -->
+<div class="bg-panel border border-line rounded-2xl p-4">
+  <form method="get" action="/app/events" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Device</label>
+      <select name="device_id" class="bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+        <option value="">All devices</option>
+        <% for (const d of devices) { %>
+          <option value="<%= d.id %>" <%= String(filters.device_id) === String(d.id) ? 'selected' : '' %>><%= d.hostname %></option>
+        <% } %>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Type</label>
+      <select name="type" class="bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+        <option value="">All types</option>
+        <% for (const t of types) { %>
+          <option value="<%= t %>" <%= filters.type === t ? 'selected' : '' %>><%= t %></option>
+        <% } %>
+      </select>
+    </div>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition">Apply</button>
+    <a href="/app/events" class="px-4 py-2 rounded-xl border border-line text-sm text-slate-400 hover:text-slate-200 hover:bg-panel2 transition">Reset</a>
+  </form>
+</div>
+
+<!-- Events table -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold text-white">Event explorer</h2>
+    <span class="text-xs text-slate-500"><%= total %> total · page <%= current %> / <%= pages %></span>
+  </div>
+  <% if (events.length === 0) { %>
+    <div class="text-sm text-slate-500 py-10 text-center">No events match the current filters.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+            <th class="py-2.5 pr-4 font-medium">Type</th>
+            <th class="py-2.5 pr-4 font-medium">Severity</th>
+            <th class="py-2.5 pr-4 font-medium">Device</th>
+            <th class="py-2.5 pr-4 font-medium">Data</th>
+            <th class="py-2.5 font-medium">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const e of events) { %>
+            <tr class="border-b border-line/50 hover:bg-panel2/60 align-top">
+              <td class="py-2.5 pr-4 font-mono text-xs text-slate-200 whitespace-nowrap"><%= e.type %></td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= sevBadge(e.severity) %>"><%= e.severity %></span></td>
+              <td class="py-2.5 pr-4"><a class="text-accent hover:underline text-xs" href="/app/devices/<%= e.device_id %>"><%= e.hostname %></a></td>
+              <td class="py-2.5 pr-4"><code class="text-[11px] text-slate-400 break-all"><%= e.data.length > 180 ? e.data.slice(0, 180) + '…' : e.data %></code></td>
+              <td class="py-2.5 text-slate-500 text-xs whitespace-nowrap" data-ts="<%= e.created_at %>"><%= e.created_at %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <% 
+      const qs = (p) => {
+        const parts = ['page=' + p];
+        if (filters.device_id) parts.push('device_id=' + filters.device_id);
+        if (filters.type) parts.push('type=' + encodeURIComponent(filters.type));
+        return '/app/events?' + parts.join('&');
+      };
+    %>
+    <div class="flex items-center justify-between mt-4">
+      <% if (current > 1) { %>
+        <a href="<%= qs(current - 1) %>" class="px-3 py-1.5 rounded-xl border border-line text-xs text-slate-300 hover:bg-panel2 transition">← Prev</a>
+      <% } else { %><span></span><% } %>
+      <span class="text-xs text-slate-500">Page <%= current %> of <%= pages %></span>
+      <% if (current < pages) { %>
+        <a href="<%= qs(current + 1) %>" class="px-3 py-1.5 rounded-xl border border-line text-xs text-slate-300 hover:bg-panel2 transition">Next →</a>
+      <% } else { %><span></span><% } %>
+    </div>
+  <% } %>
+</div>

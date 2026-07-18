@@ -1,0 +1,41 @@
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold text-white">Fleet devices</h2>
+    <span class="text-xs text-slate-500"><%= devices.length %> device<%= devices.length === 1 ? '' : 's' %></span>
+  </div>
+  <% if (devices.length === 0) { %>
+    <div class="text-sm text-slate-500 py-10 text-center">
+      No devices enrolled yet.<br/>
+      <span class="text-xs">Generate an enroll key in <a href="/app/settings" class="text-accent hover:underline">Settings</a> and run the agent with <code class="font-mono bg-ink px-1.5 py-0.5 rounded">-enroll KEY</code>.</span>
+    </div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+            <th class="py-2.5 pr-4 font-medium">Hostname</th>
+            <th class="py-2.5 pr-4 font-medium">OS</th>
+            <th class="py-2.5 pr-4 font-medium">Arch</th>
+            <th class="py-2.5 pr-4 font-medium">Agent</th>
+            <th class="py-2.5 pr-4 font-medium">Status</th>
+            <th class="py-2.5 pr-4 font-medium">IP</th>
+            <th class="py-2.5 font-medium">Last seen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const d of devices) { %>
+            <tr class="border-b border-line/50 hover:bg-panel2/60">
+              <td class="py-2.5 pr-4"><a class="text-accent hover:underline font-medium" href="/app/devices/<%= d.id %>"><%= d.hostname %></a></td>
+              <td class="py-2.5 pr-4 text-slate-300"><%= d.os || '—' %></td>
+              <td class="py-2.5 pr-4 text-slate-400"><%= d.arch || '—' %></td>
+              <td class="py-2.5 pr-4 text-slate-400 font-mono text-xs"><%= d.agent_version || '—' %></td>
+              <td class="py-2.5 pr-4"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= statusBadge(d.status) %>"><%= d.status %></span></td>
+              <td class="py-2.5 pr-4 text-slate-400 font-mono text-xs"><%= d.ip || '—' %></td>
+              <td class="py-2.5 text-slate-500 text-xs" data-ts="<%= d.last_seen %>"><%= d.last_seen %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

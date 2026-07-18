@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Runtime data & secrets
+server/data/*.db
+server/data/*.db-*
+server/SEED_CREDENTIALS.txt
+fortrix-agent.json
+*.log
+
+# Build artifacts
+*.exe
+*.tmp
+server.tar.gz

@@ -1,0 +1,22 @@
+{
+  "name": "fortrix-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fortrix EPP - MVP server (agent API + dashboard)",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.2.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
+    "memorystore": "^1.6.7"
+  }
+}

@@ -1,0 +1,89 @@
+<% if (saved) { %>
+  <div class="px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center gap-2">
+    <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+    <span>Settings saved.</span>
+  </div>
+<% } %>
+
+<!-- Thresholds -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h2 class="text-sm font-semibold text-white mb-1">Detection thresholds</h2>
+  <p class="text-xs text-slate-500 mb-4">Applied on event ingest by the rules engine. Agents also pull these via <code class="font-mono bg-ink px-1.5 py-0.5 rounded">/api/v1/config</code>.</p>
+  <form method="post" action="/app/settings/thresholds" class="flex flex-wrap items-end gap-4">
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Burst file read (MB / 60s)</label>
+      <input type="number" name="fs_read_burst_mb" min="1" value="<%= thresholds.fs_read_burst_mb %>"
+             class="w-44 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60" />
+    </div>
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Clipboard changes (per min)</label>
+      <input type="number" name="clipboard_rapid_changes" min="1" value="<%= thresholds.clipboard_rapid_changes %>"
+             class="w-44 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60" />
+    </div>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition">Save thresholds</button>
+  </form>
+</div>
+
+<!-- Enroll keys -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h2 class="text-sm font-semibold text-white">Enroll keys</h2>
+      <p class="text-xs text-slate-500 mt-0.5">Agents enroll with <code class="font-mono bg-ink px-1.5 py-0.5 rounded">fortrix-agent.exe -server https://fortrix.xyz -enroll KEY</code></p>
+    </div>
+  </div>
+
+  <form method="post" action="/app/settings/keys" class="flex flex-wrap items-end gap-3 mb-5">
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Label</label>
+      <input type="text" name="label" placeholder="e.g. hq-laptops" maxlength="64"
+             class="w-56 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+    </div>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition flex items-center gap-2">
+      <i data-lucide="key-round" style="width:14px;height:14px;"></i> Generate key
+    </button>
+  </form>
+
+  <% if (keys.length === 0) { %>
+    <div class="text-sm text-slate-500 py-8 text-center">No enroll keys yet.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+            <th class="py-2.5 pr-4 font-medium">Key</th>
+            <th class="py-2.5 pr-4 font-medium">Label</th>
+            <th class="py-2.5 pr-4 font-medium">Status</th>
+            <th class="py-2.5 pr-4 font-medium">Created</th>
+            <th class="py-2.5 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const k of keys) { %>
+            <tr class="border-b border-line/50 hover:bg-panel2/60">
+              <td class="py-2.5 pr-4"><code class="font-mono text-xs text-slate-300 break-all"><%= k.key %></code></td>
+              <td class="py-2.5 pr-4 text-slate-300"><%= k.label %></td>
+              <td class="py-2.5 pr-4">
+                <span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= k.active ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-slate-500/15 text-slate-400 border border-slate-500/30' %>">
+                  <%= k.active ? 'active' : 'inactive' %>
+                </span>
+              </td>
+              <td class="py-2.5 pr-4 text-slate-500 text-xs whitespace-nowrap" data-ts="<%= k.created_at %>"><%= k.created_at %></td>
+              <td class="py-2.5">
+                <% if (k.active) { %>
+                  <form method="post" action="/app/settings/keys/<%= k.id %>/deactivate">
+                    <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition">Deactivate</button>
+                  </form>
+                <% } else { %>
+                  <form method="post" action="/app/settings/keys/<%= k.id %>/activate">
+                    <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition">Reactivate</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
