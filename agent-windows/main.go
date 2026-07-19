@@ -14,7 +14,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-const agentVersion = "0.1.0"
+const agentVersion = "0.3.0"
 
 // done is closed by the service wrapper to request shutdown.
 var done = make(chan struct{})
@@ -186,6 +186,7 @@ func runAgent() {
 
 	if *onceFlag {
 		sendHeartbeat()
+		// ETW doesn't batch in -once mode well; use polling fallback.
 		pc.tick()
 		nc.tick()
 		ic.tick()
@@ -197,7 +198,7 @@ func runAgent() {
 
 	log.Printf("fortrix-agent %s started (device #%d → %s)", agentVersion, cfg.DeviceID, cfg.ServerURL)
 
-	procT := time.NewTicker(15 * time.Second)
+	procT := time.NewTicker(1 * time.Second)   // high-frequency polling for near-realtime detection
 	netT := time.NewTicker(20 * time.Second)
 	ioT := time.NewTicker(60 * time.Second)
 	clipT := time.NewTicker(2 * time.Second)
