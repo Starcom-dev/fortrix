@@ -13,3 +13,9 @@ fortrix-agent.json
 *.tmp
 server.tar.gz
 server/data_backup*
+
+# VPS backup temp files
+*.bak_*
+_vps_*.sh
+_test_*.sh
+_test_*.ps1
