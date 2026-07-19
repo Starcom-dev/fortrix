@@ -559,3 +559,70 @@ router.get('/audit', requireAuth, requireRole('owner'), (req, res) => {
 });
 
 module.exports = router;
+
+// ---------------------------------------------------------------------------
+// Agent versions CRUD (admin+, dashboard; scoped for admins to see across orgs)
+// ---------------------------------------------------------------------------
+router.get('/agent/versions', requireAuth, requireRole('admin'), (req, res) => {
+  const platform = typeof req.query.platform === 'string' ? req.query.platform.trim() : '';
+  const arch = typeof req.query.arch === 'string' ? req.query.arch.trim() : '';
+
+  let sql = 'SELECT * FROM agent_versions WHERE 1=1';
+  const params = [];
+  if (platform) { sql += ' AND platform = ?'; params.push(platform); }
+  if (arch) { sql += ' AND arch = ?'; params.push(arch); }
+  sql += ' ORDER BY created_at DESC LIMIT 50';
+
+  const versions = db.prepare(sql).all(...params);
+  res.render('agent_versions', {
+    title: 'Agent Versions', active: 'settings',
+    versions,
+    filters: { platform, arch },
+  });
+});
+
+router.post('/agent/versions', requireAuth, requireRole('admin'), (req, res) => {
+  const body = req.body || {};
+  const version = String(body.version || '').trim().slice(0, 32);
+  const platform = String(body.platform || 'windows').trim().slice(0, 16);
+  const arch = String(body.arch || 'amd64').trim().slice(0, 16);
+  const url = String(body.url || '').trim().slice(0, 2000);
+  const sha256 = String(body.sha256 || '').trim().slice(0, 64);
+  const releaseNotes = String(body.release_notes || '').trim().slice(0, 2000);
+
+  if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
+    req.session.flash = { type: 'error', message: 'Version must be semver format (e.g. 0.2.0).' };
+    return res.redirect('/app/agent/versions');
+  }
+  if (!url || !url.startsWith('http')) {
+    req.session.flash = { type: 'error', message: 'Download URL is required and must start with http(s).' };
+    return res.redirect('/app/agent/versions');
+  }
+  if (!sha256 || sha256.length !== 64 || !/^[0-9a-f]{64}$/.test(sha256)) {
+    req.session.flash = { type: 'error', message: 'SHA256 must be 64 lowercase hex chars.' };
+    return res.redirect('/app/agent/versions');
+  }
+
+  // Upsert: if (version, platform, arch) exists, update; else insert.
+  const exists = db.prepare('SELECT id FROM agent_versions WHERE version = ? AND platform = ? AND arch = ?').get(version, platform, arch);
+  if (exists) {
+    db.prepare('UPDATE agent_versions SET url = ?, sha256 = ?, release_notes = ?, created_at = datetime(\'now\') WHERE id = ?').run(url, sha256, releaseNotes, exists.id);
+    audit(req.orgId, req.user, 'agent_version_update', `version=${version} platform=${platform} arch=${arch}`, clientIp(req));
+    req.session.flash = { type: 'success', message: `Agent ${version} (${platform}/${arch}) updated.` };
+  } else {
+    db.prepare('INSERT INTO agent_versions (version, platform, arch, url, sha256, release_notes) VALUES (?, ?, ?, ?, ?, ?)').run(version, platform, arch, url, sha256, releaseNotes);
+    audit(req.orgId, req.user, 'agent_version_create', `version=${version} platform=${platform} arch=${arch}`, clientIp(req));
+    req.session.flash = { type: 'success', message: `Agent ${version} (${platform}/${arch}) published.` };
+  }
+  res.redirect('/app/agent/versions');
+});
+
+router.post('/agent/versions/:id/delete', requireAuth, requireRole('admin'), (req, res) => {
+  const v = db.prepare('SELECT * FROM agent_versions WHERE id = ?').get(req.params.id);
+  if (v) {
+    db.prepare('DELETE FROM agent_versions WHERE id = ?').run(req.params.id);
+    audit(req.orgId, req.user, 'agent_version_delete', `version=${v.version} platform=${v.platform} arch=${v.arch}`, clientIp(req));
+    req.session.flash = { type: 'success', message: `Agent ${v.version} deleted.` };
+  }
+  res.redirect('/app/agent/versions');
+});

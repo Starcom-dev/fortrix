@@ -1,0 +1,106 @@
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h2 class="text-sm font-semibold text-white mb-1">Publish agent version</h2>
+  <p class="text-xs text-slate-500 mb-4">Upload the agent binary to a CDN or object storage, then register its URL and SHA256 here. Agents poll for updates via <code class="font-mono bg-ink px-1.5 py-0.5 rounded text-xs">/api/v1/agent/version</code>.</p>
+  <form method="post" action="/app/agent/versions" class="space-y-3">
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Version (semver)</label>
+        <input type="text" name="version" required pattern="\d+\.\d+\.\d+" placeholder="0.2.0"
+               class="w-32 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Platform</label>
+        <select name="platform" class="w-28 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+          <option value="windows">windows</option>
+          <option value="darwin">macOS</option>
+          <option value="linux">linux</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Arch</label>
+        <select name="arch" class="w-24 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+          <option value="amd64">amd64</option>
+          <option value="arm64">arm64</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Download URL</label>
+        <input type="url" name="url" required placeholder="https://cdn.example.com/agent-0.2.0.exe" maxlength="2000"
+               class="w-96 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3 items-end">
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs text-slate-500 mb-1">SHA256 (64 hex, lowercase)</label>
+        <input type="text" name="sha256" required minlength="64" maxlength="64" pattern="[0-9a-f]{64}" placeholder="abcdef01..."
+               class="w-full bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 font-mono text-xs placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Release notes (optional)</label>
+        <input type="text" name="release_notes" maxlength="2000" placeholder="e.g. ETW collector support, Linux agent"
+               class="w-72 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+      </div>
+      <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition flex items-center gap-2">
+        <i data-lucide="upload" style="width:14px;height:14px;"></i> Publish
+      </button>
+    </div>
+    <p class="text-[11px] text-slate-600">SHA256: <code class="font-mono text-xs">certutil -hashfile fortrix-agent.exe SHA256</code> or <code class="font-mono text-xs">sha256sum fortrix-agent.exe</code></p>
+  </form>
+</div>
+
+<!-- Current versions -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold text-white">Published versions</h2>
+    <form method="get" action="/app/agent/versions" class="flex items-center gap-2">
+      <select name="platform" class="w-28 bg-ink border border-line rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accent/60">
+        <option value="">all platforms</option>
+        <option value="windows" <%= filters.platform === 'windows' ? 'selected' : '' %>>windows</option>
+        <option value="darwin" <%= filters.platform === 'darwin' ? 'selected' : '' %>>macOS</option>
+        <option value="linux" <%= filters.platform === 'linux' ? 'selected' : '' %>>linux</option>
+      </select>
+      <select name="arch" class="w-24 bg-ink border border-line rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accent/60">
+        <option value="">all</option>
+        <option value="amd64" <%= filters.arch === 'amd64' ? 'selected' : '' %>>amd64</option>
+        <option value="arm64" <%= filters.arch === 'arm64' ? 'selected' : '' %>>arm64</option>
+      </select>
+      <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-panel2 border border-line text-slate-300 hover:bg-line transition">Filter</button>
+    </form>
+  </div>
+  <% if (versions.length === 0) { %>
+    <div class="text-sm text-slate-500 py-8 text-center">No agent versions published yet.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+            <th class="py-2.5 pr-4 font-medium">Version</th>
+            <th class="py-2.5 pr-4 font-medium">Platform</th>
+            <th class="py-2.5 pr-4 font-medium">Arch</th>
+            <th class="py-2.5 pr-4 font-medium">SHA256</th>
+            <th class="py-2.5 pr-4 font-medium">Notes</th>
+            <th class="py-2.5 pr-4 font-medium">Published</th>
+            <th class="py-2.5 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const v of versions) { %>
+            <tr class="border-b border-line/50 hover:bg-panel2/60">
+              <td class="py-2.5 pr-4"><code class="font-mono text-xs text-accent"><%= v.version %></code></td>
+              <td class="py-2.5 pr-4 text-slate-300"><%= v.platform %></td>
+              <td class="py-2.5 pr-4 text-slate-400 text-xs"><%= v.arch %></td>
+              <td class="py-2.5 pr-4"><code class="font-mono text-[10px] text-slate-500"><%= v.sha256.slice(0, 12) %>…</code></td>
+              <td class="py-2.5 pr-4 text-slate-400 text-xs max-w-[200px] truncate"><%= v.release_notes || '—' %></td>
+              <td class="py-2.5 pr-4 text-slate-500 text-xs whitespace-nowrap" data-ts="<%= v.created_at %>"><%= v.created_at %></td>
+              <td class="py-2.5">
+                <form method="post" action="/app/agent/versions/<%= v.id %>/delete" onsubmit="return confirm('Delete version <%= v.version %> (<%= v.platform %>/<%= v.arch %>)?')">
+                  <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

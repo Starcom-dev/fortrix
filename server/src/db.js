@@ -120,6 +120,18 @@ CREATE TABLE IF NOT EXISTS leads (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- agent versions for auto-update
+CREATE TABLE IF NOT EXISTS agent_versions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  version      TEXT NOT NULL,
+  platform     TEXT NOT NULL DEFAULT 'windows',
+  arch         TEXT NOT NULL DEFAULT 'amd64',
+  url          TEXT NOT NULL,
+  sha256       TEXT NOT NULL DEFAULT '',
+  release_notes TEXT NOT NULL DEFAULT '',
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- heartbeat metric history (small helper table for device detail charts)
 CREATE TABLE IF NOT EXISTS heartbeats (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,

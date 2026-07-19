@@ -204,6 +204,7 @@ func runAgent() {
 	hbT := time.NewTicker(60 * time.Second)
 	sendT := time.NewTicker(30 * time.Second)
 	cfgT := time.NewTicker(1 * time.Hour)
+	updateT := time.NewTicker(checkInterval)
 
 	sendHeartbeat()
 
@@ -227,6 +228,8 @@ func runAgent() {
 				agentCfg = fresh
 				cfgMu.Unlock()
 			}
+		case <-updateT.C:
+			checkForUpdate(api)
 		case <-done:
 			log.Println("shutting down...")
 			flush()

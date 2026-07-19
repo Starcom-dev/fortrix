@@ -198,13 +198,63 @@ router.post('/events', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/config
+// Agent version config (per-device, with global fallback)
 // ---------------------------------------------------------------------------
 router.get('/config', (req, res) => {
   return res.json({
     thresholds: getThresholds(req.device.org_id),
     intervals: getIntervals(),
+    agent_version: req.device.agent_version || '0.0.0',
   });
 });
+
+// GET /api/v1/agent/version — check for available update
+router.get('/agent/version', (req, res) => {
+  const current = (typeof req.query.current === 'string') ? req.query.current.slice(0, 32) : '';
+  const platform = osToPlatform(req.device.os);
+  const arch = req.device.arch || 'amd64';
+
+  const latest = db.prepare(`
+    SELECT version, url, sha256, release_notes
+    FROM agent_versions
+    WHERE platform = ? AND arch = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+  `).get(platform, arch);
+
+  if (!latest || !current) {
+    return res.json({ update_available: false, current, latest: latest ? latest.version : null });
+  }
+
+  // Simple semver-like comparison: split, compare each segment.
+  const newer = compareVersions(latest.version, current) > 0;
+  return res.json({
+    update_available: newer,
+    current,
+    latest: latest.version,
+    url: newer ? latest.url : undefined,
+    sha256: newer ? latest.sha256 : undefined,
+    release_notes: newer ? latest.release_notes : undefined,
+  });
+});
+
+function compareVersions(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na > nb) return 1;
+    if (na < nb) return -1;
+  }
+  return 0;
+}
+function osToPlatform(os) {
+  if (!os) return 'windows';
+  const s = os.toLowerCase();
+  if (s.includes('windows')) return 'windows';
+  if (s.includes('darwin') || s.includes('mac')) return 'darwin';
+  return 'linux';
+}
 
 module.exports = router;

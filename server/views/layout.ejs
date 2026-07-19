@@ -61,7 +61,7 @@
           ];
           if (rank >= 3) nav.push({ href: '/app/users', icon: 'users', label: 'Users', key: 'users' });
           if (rank >= 3) nav.push({ href: '/app/audit', icon: 'scroll-text', label: 'Audit Log', key: 'audit' });
-          if (rank >= 2) nav.push({ href: '/app/settings', icon: 'settings', label: 'Settings', key: 'settings' });
+          if (rank >= 2) { nav.push({ href: '/app/settings', icon: 'settings', label: 'Settings', key: 'settings' }); nav.push({ href: '/app/agent/versions', icon: 'package-open', label: 'Agent Versions', key: 'agent_versions' }); }
           if (superUser) nav.push({ href: '/app/orgs', icon: 'building-2', label: 'Organizations', key: 'orgs' });
           if (superUser) nav.push({ href: '/app/leads', icon: 'mail', label: 'Leads', key: 'leads' });
         %>
