@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { db, getThresholds, getIntervals } = require('../db');
 const { evaluateEvent } = require('../rules');
 const { rateLimit } = require('../rate-limit');
+const { sendAlertEmail } = require('../email');
 
 const router = express.Router();
 
@@ -182,8 +183,22 @@ router.post('/events', (req, res) => {
 
       const alert = evaluateEvent(evt, thresholds);
       if (alert) {
-        insertAlertStmt.run(req.device.id, info.lastInsertRowid, alert.rule, alert.title, alert.severity, 'open');
+        const alertInfo = insertAlertStmt.run(req.device.id, info.lastInsertRowid, alert.rule, alert.title, alert.severity, 'open');
         alertsCreated++;
+
+        // Fire-and-forget email notification.
+        setImmediate(() => {
+          try {
+            sendAlertEmail({
+              orgId: req.device.org_id,
+              alert: { id: alertInfo.lastInsertRowid, rule: alert.rule, title: alert.title, severity: alert.severity },
+              device: { id: req.device.id, hostname: req.device.hostname },
+              event: evt,
+            });
+          } catch (err) {
+            console.error('[fortrix] alert email hook failed:', err.message);
+          }
+        });
       }
     }
   });

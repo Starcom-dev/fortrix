@@ -6,7 +6,7 @@ const MemoryStore = require('memorystore')(session);
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const {
-  db, getSetting, setSetting, setOrgSetting, getThresholds,
+  db, getSetting, setSetting, setOrgSetting, getOrgSetting, getThresholds,
   audit, randomPassword,
 } = require('../db');
 const { rateLimit } = require('../rate-limit');
@@ -341,6 +341,11 @@ router.get('/settings', requireAuth, requireRole('admin'), (req, res) => {
     keys,
     thresholds: getThresholds(req.orgId),
     saved: req.query.saved === '1',
+    email: {
+      enabled: getOrgSetting(req.orgId, 'notify_enabled', '0') === '1',
+      notify_email: getOrgSetting(req.orgId, 'notify_email', ''),
+      notify_min_severity: getOrgSetting(req.orgId, 'notify_min_severity', 'high'),
+    },
   });
 });
 
@@ -372,6 +377,29 @@ router.post('/settings/thresholds', requireAuth, requireRole('admin'), (req, res
   if (Number.isFinite(clip) && clip > 0) setOrgSetting(req.orgId, 'clipboard_rapid_changes', Math.floor(clip));
   audit(req.orgId, req.user, 'thresholds_update', `burst_mb=${burst} clip_per_min=${clip}`, clientIp(req));
   res.redirect('/app/settings?saved=1');
+});
+
+router.post('/settings/email', requireAuth, requireRole('admin'), (req, res) => {
+  const body = req.body || {};
+  const email = String(body.notify_email || '').trim().slice(0, 255);
+  const minSev = String(body.notify_min_severity || 'high').trim();
+  const enabled = body.notify_enabled === '1' ? '1' : '0';
+
+  if (email && !email.includes('@')) {
+    req.session.flash = { type: 'error', message: 'Invalid email address.' };
+    return res.redirect('/app/settings');
+  }
+  if (!['info', 'low', 'medium', 'high', 'critical'].includes(minSev)) {
+    req.session.flash = { type: 'error', message: 'Invalid severity.' };
+    return res.redirect('/app/settings');
+  }
+
+  setOrgSetting(req.orgId, 'notify_enabled', enabled);
+  setOrgSetting(req.orgId, 'notify_email', email);
+  setOrgSetting(req.orgId, 'notify_min_severity', minSev);
+  audit(req.orgId, req.user, 'email_settings_update', `enabled=${enabled} email=${email.slice(0, 32)} severity=${minSev}`, clientIp(req));
+  req.session.flash = { type: 'success', message: 'Email notification settings saved.' };
+  res.redirect('/app/settings');
 });
 
 // ---------------------------------------------------------------------------
