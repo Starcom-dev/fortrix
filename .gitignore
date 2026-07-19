@@ -12,3 +12,4 @@ fortrix-agent.json
 *.exe
 *.tmp
 server.tar.gz
+server/data_backup*

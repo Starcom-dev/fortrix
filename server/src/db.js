@@ -18,14 +18,25 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 // ---------------------------------------------------------------------------
-// Schema (idempotent migrations)
+// Schema v2 — multi-tenant (idempotent migrations)
 // ---------------------------------------------------------------------------
 db.exec(`
-CREATE TABLE IF NOT EXISTS admins (
+CREATE TABLE IF NOT EXISTS orgs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  org_id        INTEGER REFERENCES orgs(id) ON DELETE CASCADE,
   username      TEXT NOT NULL UNIQUE,
+  email         TEXT NOT NULL DEFAULT '',
   password_hash TEXT NOT NULL,
-  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  role          TEXT NOT NULL DEFAULT 'analyst' CHECK (role IN ('super_admin','owner','admin','analyst')),
+  active        INTEGER NOT NULL DEFAULT 1,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  last_login    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS enroll_keys (
@@ -79,6 +90,25 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS org_settings (
+  org_id INTEGER NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  key    TEXT NOT NULL,
+  value  TEXT NOT NULL,
+  PRIMARY KEY (org_id, key)
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  org_id     INTEGER,
+  user_id    INTEGER,
+  username   TEXT NOT NULL DEFAULT '',
+  action     TEXT NOT NULL,
+  details    TEXT NOT NULL DEFAULT '',
+  ip         TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_org ON audit_logs(org_id, created_at);
+
 CREATE TABLE IF NOT EXISTS leads (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   email      TEXT NOT NULL,
@@ -102,12 +132,52 @@ CREATE TABLE IF NOT EXISTS heartbeats (
 CREATE INDEX IF NOT EXISTS idx_heartbeats_device ON heartbeats(device_id, created_at);
 `);
 
+// Column adds for pre-multi-tenant databases (idempotent).
+function hasColumn(table, col) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === col);
+}
+if (!hasColumn('devices', 'org_id')) db.exec('ALTER TABLE devices ADD COLUMN org_id INTEGER REFERENCES orgs(id)');
+if (!hasColumn('enroll_keys', 'org_id')) db.exec('ALTER TABLE enroll_keys ADD COLUMN org_id INTEGER REFERENCES orgs(id)');
+
 // ---------------------------------------------------------------------------
-// Settings helpers
+// v1 → v2 data migration (runs once)
+// ---------------------------------------------------------------------------
+const migrateV2 = db.transaction(() => {
+  if (db.prepare('SELECT COUNT(*) AS c FROM orgs').get().c === 0) {
+    db.prepare("INSERT INTO orgs (id, name) VALUES (1, 'Default Organization')").run();
+  }
+
+  const legacyTable = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='admins'")
+    .get();
+  if (legacyTable) {
+    for (const a of db.prepare('SELECT * FROM admins').all()) {
+      const exists = db.prepare('SELECT id FROM users WHERE username = ?').get(a.username);
+      if (!exists) {
+        db.prepare(
+          'INSERT INTO users (org_id, username, password_hash, role, created_at) VALUES (1, ?, ?, ?, ?)'
+        ).run(a.username, a.password_hash, 'super_admin', a.created_at);
+      }
+    }
+    db.exec('ALTER TABLE admins RENAME TO admins_legacy_v1');
+    console.log('[fortrix] migrated legacy admins → users (super_admin), table kept as admins_legacy_v1');
+  }
+
+  db.prepare('UPDATE devices SET org_id = 1 WHERE org_id IS NULL').run();
+  db.prepare('UPDATE enroll_keys SET org_id = 1 WHERE org_id IS NULL').run();
+});
+migrateV2();
+
+// ---------------------------------------------------------------------------
+// Settings helpers (global defaults + per-org overrides)
 // ---------------------------------------------------------------------------
 const getSettingStmt = db.prepare('SELECT value FROM settings WHERE key = ?');
 const setSettingStmt = db.prepare(
   'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+);
+const getOrgSettingStmt = db.prepare('SELECT value FROM org_settings WHERE org_id = ? AND key = ?');
+const setOrgSettingStmt = db.prepare(
+  'INSERT INTO org_settings (org_id, key, value) VALUES (?, ?, ?) ON CONFLICT(org_id, key) DO UPDATE SET value = excluded.value'
 );
 
 function getSetting(key, fallback = null) {
@@ -118,6 +188,16 @@ function getSetting(key, fallback = null) {
 
 function setSetting(key, value) {
   setSettingStmt.run(key, JSON.stringify(value));
+}
+
+function getOrgSetting(orgId, key, fallback = null) {
+  const row = getOrgSettingStmt.get(orgId, key);
+  if (!row) return fallback;
+  try { return JSON.parse(row.value); } catch { return fallback; }
+}
+
+function setOrgSetting(orgId, key, value) {
+  setOrgSettingStmt.run(orgId, key, JSON.stringify(value));
 }
 
 const DEFAULT_SETTINGS = {
@@ -138,10 +218,16 @@ if (getSettingStmt.get('session_secret') === undefined) {
     .run('session_secret', JSON.stringify(crypto.randomBytes(32).toString('hex')));
 }
 
-function getThresholds() {
-  return {
+// Thresholds: global default, overridable per org.
+function getThresholds(orgId = null) {
+  const global = {
     fs_read_burst_mb: Number(getSetting('fs_read_burst_mb', DEFAULT_SETTINGS.fs_read_burst_mb)),
     clipboard_rapid_changes: Number(getSetting('clipboard_rapid_changes', DEFAULT_SETTINGS.clipboard_rapid_changes)),
+  };
+  if (!orgId) return global;
+  return {
+    fs_read_burst_mb: Number(getOrgSetting(orgId, 'fs_read_burst_mb', global.fs_read_burst_mb)),
+    clipboard_rapid_changes: Number(getOrgSetting(orgId, 'clipboard_rapid_changes', global.clipboard_rapid_changes)),
   };
 }
 
@@ -153,7 +239,29 @@ function getIntervals() {
 }
 
 // ---------------------------------------------------------------------------
-// Seed (first run only): admin + 1 enroll key
+// Audit log
+// ---------------------------------------------------------------------------
+const auditStmt = db.prepare(
+  'INSERT INTO audit_logs (org_id, user_id, username, action, details, ip) VALUES (?, ?, ?, ?, ?, ?)'
+);
+
+function audit(orgId, user, action, details = '', ip = '') {
+  try {
+    auditStmt.run(
+      orgId ?? null,
+      user ? user.id : null,
+      user ? user.username : '',
+      String(action),
+      typeof details === 'string' ? details : JSON.stringify(details),
+      String(ip || '')
+    );
+  } catch (err) {
+    console.error('[fortrix] audit write failed:', err.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
 // ---------------------------------------------------------------------------
 function randomPassword(len) {
   const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
@@ -167,16 +275,23 @@ function randomPassword(len) {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// Seed (first run only): org + super admin + 1 enroll key
+// ---------------------------------------------------------------------------
 function seedIfNeeded() {
-  const adminCount = db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
-  if (adminCount > 0) return null;
+  const userCount = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
+  if (userCount > 0) return null;
+
+  if (db.prepare('SELECT COUNT(*) AS c FROM orgs').get().c === 0) {
+    db.prepare("INSERT INTO orgs (id, name) VALUES (1, 'Default Organization')").run();
+  }
 
   const password = randomPassword(16);
   const hash = bcrypt.hashSync(password, 10);
-  db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run('admin', hash);
+  db.prepare("INSERT INTO users (org_id, username, password_hash, role) VALUES (1, 'admin', ?, 'super_admin')").run(hash);
 
   const enrollKey = 'ftx_' + crypto.randomBytes(16).toString('hex');
-  db.prepare('INSERT INTO enroll_keys (key, label, active) VALUES (?, ?, 1)').run(enrollKey, 'default');
+  db.prepare('INSERT INTO enroll_keys (key, label, active, org_id) VALUES (?, ?, 1, 1)').run(enrollKey, 'default');
 
   const banner = [
     '=== FORTRIX SEED CREDENTIALS (generated on first run) ===',
@@ -199,4 +314,11 @@ function seedIfNeeded() {
   return { username: 'admin', password, enrollKey };
 }
 
-module.exports = { db, getSetting, setSetting, getThresholds, getIntervals, seedIfNeeded, DB_PATH };
+module.exports = {
+  db,
+  getSetting, setSetting,
+  getOrgSetting, setOrgSetting,
+  getThresholds, getIntervals,
+  audit, randomPassword,
+  seedIfNeeded, DB_PATH,
+};

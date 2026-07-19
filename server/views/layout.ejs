@@ -50,14 +50,21 @@
         </div>
       </div>
       <nav class="flex-1 px-3 py-4 space-y-1">
-        <% const nav = [
-          { href: '/app', icon: 'layout-dashboard', label: 'Overview', key: 'overview' },
-          { href: '/app/devices', icon: 'monitor', label: 'Devices', key: 'devices' },
-          { href: '/app/leads', icon: 'mail', label: 'Leads', key: 'leads' },
-          { href: '/app/alerts', icon: 'siren', label: 'Alerts', key: 'alerts' },
-          { href: '/app/events', icon: 'list', label: 'Events', key: 'events' },
-          { href: '/app/settings', icon: 'settings', label: 'Settings', key: 'settings' },
-        ]; %>
+        <% 
+          const rank = typeof roleRank !== 'undefined' ? roleRank : 0;
+          const superUser = typeof isSuper !== 'undefined' && isSuper;
+          const nav = [
+            { href: '/app', icon: 'layout-dashboard', label: 'Overview', key: 'overview' },
+            { href: '/app/devices', icon: 'monitor', label: 'Devices', key: 'devices' },
+            { href: '/app/alerts', icon: 'siren', label: 'Alerts', key: 'alerts' },
+            { href: '/app/events', icon: 'list', label: 'Events', key: 'events' },
+          ];
+          if (rank >= 3) nav.push({ href: '/app/users', icon: 'users', label: 'Users', key: 'users' });
+          if (rank >= 3) nav.push({ href: '/app/audit', icon: 'scroll-text', label: 'Audit Log', key: 'audit' });
+          if (rank >= 2) nav.push({ href: '/app/settings', icon: 'settings', label: 'Settings', key: 'settings' });
+          if (superUser) nav.push({ href: '/app/orgs', icon: 'building-2', label: 'Organizations', key: 'orgs' });
+          if (superUser) nav.push({ href: '/app/leads', icon: 'mail', label: 'Leads', key: 'leads' });
+        %>
         <% for (const item of nav) { const isActive = (typeof active !== 'undefined' && active === item.key); %>
           <a href="<%= item.href %>"
              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition
@@ -84,12 +91,43 @@
           <span class="md:hidden text-sm font-semibold text-white">FORTRIX</span>
           <h1 class="text-base md:text-lg font-semibold text-white"><%= typeof title !== 'undefined' ? title : '' %></h1>
         </div>
-        <div class="flex items-center gap-2 text-xs text-slate-500">
-          <span class="hidden sm:inline">admin</span>
-          <div class="w-7 h-7 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-xs font-semibold">A</div>
+        <div class="flex items-center gap-3">
+          <% if (typeof isSuper !== 'undefined' && isSuper && typeof orgs !== 'undefined' && orgs.length > 0) { %>
+            <form method="post" action="/app/org/switch" class="hidden sm:block">
+              <select name="org_id" onchange="this.form.submit()"
+                      class="bg-ink border border-line rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-accent/60">
+                <% for (const o of orgs) { %>
+                  <option value="<%= o.id %>" <%= (typeof currentOrg !== 'undefined' && currentOrg.id === o.id) ? 'selected' : '' %>><%= o.name %></option>
+                <% } %>
+              </select>
+            </form>
+          <% } else if (typeof currentOrg !== 'undefined') { %>
+            <span class="hidden sm:inline text-xs text-slate-500"><%= currentOrg.name %></span>
+          <% } %>
+          <div class="flex items-center gap-2 text-xs text-slate-500">
+            <% if (typeof currentUser !== 'undefined') { %>
+              <span class="hidden sm:inline"><%= currentUser.username %> · <span class="text-slate-600"><%= currentUser.role.replace('_', ' ') %></span></span>
+              <div class="w-7 h-7 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-xs font-semibold"><%= currentUser.username.slice(0, 1).toUpperCase() %></div>
+            <% } %>
+          </div>
         </div>
       </header>
       <main class="flex-1 p-5 md:p-8 space-y-6">
+        <% if (typeof flash !== 'undefined' && flash) { %>
+          <div class="px-4 py-3 rounded-2xl text-sm <%= flash.type === 'error' ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' %>">
+            <div class="flex items-center gap-2">
+              <i data-lucide="<%= flash.type === 'error' ? 'alert-circle' : 'check-circle' %>" style="width:16px;height:16px;"></i>
+              <span><%= flash.message %></span>
+            </div>
+            <% if (flash.creds) { %>
+              <div class="mt-2 p-3 rounded-xl bg-ink border border-line font-mono text-xs text-slate-300">
+                <div>Username: <span class="text-white"><%= flash.creds.username %></span></div>
+                <div>Password: <span class="text-white"><%= flash.creds.password %></span></div>
+                <div class="mt-1 text-slate-500 font-sans">⚠ Shown once — copy now and share via a secure channel.</div>
+              </div>
+            <% } %>
+          </div>
+        <% } %>
         <%- body %>
       </main>
     </div>

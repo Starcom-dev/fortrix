@@ -19,20 +19,21 @@ router.post('/enroll', rateLimit({ windowMs: 10 * 60 * 1000, max: 10, prefix: 'e
   const enrollKey = typeof body.enroll_key === 'string' ? body.enroll_key.trim() : '';
   if (!enrollKey) return res.status(403).json({ error: 'invalid_enroll_key' });
 
-  const key = db.prepare('SELECT id FROM enroll_keys WHERE key = ? AND active = 1').get(enrollKey);
+  const key = db.prepare('SELECT id, org_id FROM enroll_keys WHERE key = ? AND active = 1').get(enrollKey);
   if (!key) return res.status(403).json({ error: 'invalid_enroll_key' });
 
   const token = crypto.randomBytes(24).toString('hex'); // 48 hex chars
   const info = db.prepare(`
-    INSERT INTO devices (token, hostname, os, arch, agent_version, ip, status, enrolled_at, last_seen)
-    VALUES (?, ?, ?, ?, ?, ?, 'online', datetime('now'), datetime('now'))
+    INSERT INTO devices (token, hostname, os, arch, agent_version, ip, status, enrolled_at, last_seen, org_id)
+    VALUES (?, ?, ?, ?, ?, ?, 'online', datetime('now'), datetime('now'), ?)
   `).run(
     token,
     String(body.hostname || 'unknown').slice(0, 255),
     String(body.os || '').slice(0, 64),
     String(body.arch || '').slice(0, 32),
     String(body.agent_version || '').slice(0, 32),
-    req.ip || ''
+    req.ip || '',
+    key.org_id || null
   );
 
   return res.status(201).json({ device_id: info.lastInsertRowid, device_token: token });
@@ -161,7 +162,7 @@ router.post('/events', (req, res) => {
     return res.status(400).json({ error: 'batch_too_large', max: MAX_BATCH });
   }
 
-  const thresholds = getThresholds();
+  const thresholds = getThresholds(req.device.org_id);
   let accepted = 0;
   let alertsCreated = 0;
 
@@ -201,7 +202,7 @@ router.post('/events', (req, res) => {
 // ---------------------------------------------------------------------------
 router.get('/config', (req, res) => {
   return res.json({
-    thresholds: getThresholds(),
+    thresholds: getThresholds(req.device.org_id),
     intervals: getIntervals(),
   });
 });

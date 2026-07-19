@@ -1,0 +1,100 @@
+<!-- Create user -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h2 class="text-sm font-semibold text-white mb-1">Add user</h2>
+  <p class="text-xs text-slate-500 mb-4">Password is generated automatically and shown once after creation.</p>
+  <form method="post" action="/app/users" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Username</label>
+      <input type="text" name="username" required minlength="3" maxlength="64" placeholder="e.g. j.doe"
+             class="w-48 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+    </div>
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Email (optional)</label>
+      <input type="email" name="email" maxlength="255" placeholder="user@company.com"
+             class="w-56 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+    </div>
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Role</label>
+      <select name="role" class="w-36 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+        <% for (const r of assignableRoles) { %>
+          <option value="<%= r %>" <%= r === 'analyst' ? 'selected' : '' %>><%= r %></option>
+        <% } %>
+      </select>
+    </div>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-sm font-medium transition flex items-center gap-2">
+      <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Create user
+    </button>
+  </form>
+  <p class="text-[11px] text-slate-600 mt-3">Roles: <span class="text-slate-400">owner</span> manages users &amp; settings · <span class="text-slate-400">admin</span> manages keys &amp; thresholds · <span class="text-slate-400">analyst</span> works alerts (read + ack/resolve).</p>
+</div>
+
+<!-- User list -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h2 class="text-sm font-semibold text-white mb-4">Users</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+          <th class="py-2.5 pr-4 font-medium">Username</th>
+          <th class="py-2.5 pr-4 font-medium">Email</th>
+          <th class="py-2.5 pr-4 font-medium">Role</th>
+          <th class="py-2.5 pr-4 font-medium">Status</th>
+          <th class="py-2.5 pr-4 font-medium">Last login</th>
+          <th class="py-2.5 font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const u of users) { const isSelf = currentUser.id === u.id; const manageable = !isSelf && (isSuper || (u.role !== 'owner' && u.role !== 'super_admin')); %>
+          <tr class="border-b border-line/50 hover:bg-panel2/60">
+            <td class="py-2.5 pr-4 text-slate-200 font-medium"><%= u.username %><%= isSelf ? ' (you)' : '' %></td>
+            <td class="py-2.5 pr-4 text-slate-400"><%= u.email || '—' %></td>
+            <td class="py-2.5 pr-4">
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-accent/10 text-accent border border-accent/30"><%= u.role.replace('_', ' ') %></span>
+            </td>
+            <td class="py-2.5 pr-4">
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= u.active ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-slate-500/15 text-slate-400 border border-slate-500/30' %>">
+                <%= u.active ? 'active' : 'disabled' %>
+              </span>
+            </td>
+            <td class="py-2.5 pr-4 text-slate-500 text-xs whitespace-nowrap" <%- u.last_login ? `data-ts="${u.last_login}"` : '' %>><%= u.last_login || 'never' %></td>
+            <td class="py-2.5">
+              <% if (manageable) { %>
+                <div class="flex items-center gap-1.5">
+                  <form method="post" action="/app/users/<%= u.id %>/reset-password">
+                    <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 transition">Reset PW</button>
+                  </form>
+                  <form method="post" action="/app/users/<%= u.id %>/toggle-active">
+                    <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium <%= u.active ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20' %> transition"><%= u.active ? 'Disable' : 'Enable' %></button>
+                  </form>
+                  <form method="post" action="/app/users/<%= u.id %>/delete" onsubmit="return confirm('Delete user <%= u.username %>? This cannot be undone.')">
+                    <button type="submit" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition">Delete</button>
+                  </form>
+                </div>
+              <% } else { %>
+                <span class="text-xs text-slate-600">—</span>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Change own password -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h2 class="text-sm font-semibold text-white mb-4">Change my password</h2>
+  <form method="post" action="/app/profile/password" class="flex flex-wrap items-end gap-3">
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">Current password</label>
+      <input type="password" name="current_password" required
+             class="w-52 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60" />
+    </div>
+    <div>
+      <label class="block text-xs text-slate-500 mb-1">New password (min 10 chars)</label>
+      <input type="password" name="new_password" required minlength="10"
+             class="w-52 bg-ink border border-line rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-accent/60" />
+    </div>
+    <button type="submit" class="px-4 py-2 rounded-xl bg-panel2 hover:bg-line border border-line text-slate-200 text-sm font-medium transition">Update password</button>
+  </form>
+</div>
