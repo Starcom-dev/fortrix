@@ -11,6 +11,7 @@ fortrix-agent.json
 # Build artifacts
 *.exe
 *.tmp
+fortrix-agent-darwin-*
 server.tar.gz
 server/data_backup*
 
