@@ -5,7 +5,7 @@
 param(
     [string]$Source = (Join-Path $PSScriptRoot 'fortrix-agent.exe'),
     [string]$InstallDir = 'C:\Program Files\Fortrix',
-    [string]$Server = 'https://fortrix.my',
+    [string]$Server = 'https://fortix.my',
     [string]$EnrollKey = ''
 )
 $ErrorActionPreference = 'Stop'
