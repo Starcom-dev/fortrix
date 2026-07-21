@@ -103,7 +103,7 @@ func runAgent() {
 		cfg.ServerURL = *serverFlag
 	}
 	if cfg.ServerURL == "" {
-		log.Fatal("no server URL; run with -server https://fortrix.xyz -enroll <KEY>")
+		cfg.ServerURL = "https://fortrix.xyz"
 	}
 
 	// Enroll if we have no token yet.

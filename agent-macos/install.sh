@@ -40,9 +40,8 @@ chmod 755 "${BIN_PATH}"
 # Install launchd plist
 cp "./com.fortrix.agent.plist" "${PLIST_PATH}"
 
-# Prompt for server + enroll key
-read -rp "Server URL [https://fortrix.xyz]: " SERVER_URL
-SERVER_URL="${SERVER_URL:-https://fortrix.xyz}"
+# Prompt for enroll key only (server is pre-configured)
+SERVER_URL="https://fortrix.xyz"
 read -rp "Enroll Key: " ENROLL_KEY
 
 # Write initial program arguments to plist (launchd passes them as argv)
