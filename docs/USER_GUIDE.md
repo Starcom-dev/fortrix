@@ -2,9 +2,8 @@
 
 **Fortrix Endpoint Protection Platform** — data exfiltration detection & behavioral monitoring for Windows endpoints.
 
-- Landing: https://fortrix.xyz
-- Dashboard: https://fortrix.xyz/app
-- Version: MVP Phase 1 (agent 0.1.0)
+- Dashboard: https://fortrix.my/app
+- Version: MVP Phase 2 (agent 0.3.0)
 
 ---
 
@@ -20,14 +19,14 @@
 
 ## 2. Quick Start (Admin)
 
-1. Open https://fortrix.xyz/app and log in.
+1. Open https://fortrix.my/app and log in.
 2. Go to **Settings** → copy an active **enroll key** (or generate a new one per customer/department).
 3. Install the agent on each endpoint (next section).
 4. Watch **Overview** and **Alerts**.
 
 ## 3. Installing the Agent (per endpoint)
 
-Requirements: Windows 10/11 or Server 2016+, outbound HTTPS to `fortrix.xyz`, admin rights.
+Requirements: Windows 10/11 or Server 2016+, outbound HTTPS to `fortrix.my`, admin rights.
 
 1. Copy `fortrix-agent.exe` and `install.ps1` to the target machine (any folder).
 2. Open **PowerShell as Administrator** in that folder:
@@ -47,7 +46,7 @@ Requirements: Windows 10/11 or Server 2016+, outbound HTTPS to `fortrix.xyz`, ad
 Manual alternative (without the script):
 
 ```powershell
-.\fortrix-agent.exe -server https://fortrix.xyz -enroll <ENROLL_KEY> -once   # enroll + one test cycle
+.\fortrix-agent.exe -server https://fortrix.my -enroll <ENROLL_KEY> -once   # enroll + one test cycle
 .\fortrix-agent.exe -install                                                 # register service
 Start-Service FortrixAgent
 ```
@@ -111,7 +110,7 @@ No file contents, no keystrokes, no screenshots, no clipboard data leave the end
 
 - **Detect & alert only** — no blocking yet (block mode ships with the Phase 3 kernel driver).
 - No outbound notifications (email/webhook) yet — alerts live in the dashboard.
-- Windows agent only (macOS on the roadmap).
+- Windows & macOS agents available.
 - Agent binary is unsigned (code signing planned in Phase 2).
 
 ---
