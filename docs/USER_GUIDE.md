@@ -2,7 +2,9 @@
 
 **Fortrix Endpoint Protection Platform** — data exfiltration detection & behavioral monitoring for Windows endpoints.
 
-- Dashboard: https://fortix.my/app
+- Landing: https://fortix.my
+- Dashboard: https://fortrix.xyz/app
+- Agent server: https://fortrix.xyz
 - Version: MVP Phase 2 (agent 0.3.0)
 
 ---
@@ -19,14 +21,14 @@
 
 ## 2. Quick Start (Admin)
 
-1. Open https://fortix.my/app and log in.
+1. Open https://fortrix.xyz/app and log in.
 2. Go to **Settings** → copy an active **enroll key** (or generate a new one per customer/department).
 3. Install the agent on each endpoint (next section).
 4. Watch **Overview** and **Alerts**.
 
 ## 3. Installing the Agent (per endpoint)
 
-Requirements: Windows 10/11 or Server 2016+, outbound HTTPS to `fortix.my`, admin rights.
+Requirements: Windows 10/11 or Server 2016+, outbound HTTPS to `fortrix.xyz`, admin rights.
 
 1. Copy `fortrix-agent.exe` and `install.ps1` to the target machine (any folder).
 2. Open **PowerShell as Administrator** in that folder:
@@ -46,7 +48,7 @@ Requirements: Windows 10/11 or Server 2016+, outbound HTTPS to `fortix.my`, admi
 Manual alternative (without the script):
 
 ```powershell
-.\fortrix-agent.exe -server https://fortix.my -enroll <ENROLL_KEY> -once   # enroll + one test cycle
+.\fortrix-agent.exe -server https://fortrix.xyz -enroll <ENROLL_KEY> -once   # enroll + one test cycle
 .\fortrix-agent.exe -install                                                 # register service
 Start-Service FortrixAgent
 ```

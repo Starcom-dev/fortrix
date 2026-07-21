@@ -20,7 +20,7 @@ const agentVersion = "0.3.0"
 var done = make(chan struct{})
 
 var (
-	serverFlag   = flag.String("server", "", "server base URL, e.g. https://fortix.my")
+	serverFlag   = flag.String("server", "", "server base URL, e.g. https://fortrix.xyz")
 	enrollFlag   = flag.String("enroll", "", "enrollment key (first run)")
 	configFlag   = flag.String("config", "", "config file path (default: alongside exe)")
 	onceFlag     = flag.Bool("once", false, "run one collection cycle then exit (testing)")
@@ -103,7 +103,7 @@ func runAgent() {
 		cfg.ServerURL = *serverFlag
 	}
 	if cfg.ServerURL == "" {
-		log.Fatal("no server URL; run with -server https://fortix.my -enroll <KEY>")
+		log.Fatal("no server URL; run with -server https://fortrix.xyz -enroll <KEY>")
 	}
 
 	// Enroll if we have no token yet.

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fortrix.agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/fortrix/fortrix-agent</string>
+        <string>-config</string>
+        <string>/usr/local/fortrix/fortrix-agent.json</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/fortrix-agent.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/fortrix-agent.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <!-- Full Disk Access required for process inspection.
+         Prompt user to grant in System Preferences > Security & Privacy -->
+</dict>
+</plist>
