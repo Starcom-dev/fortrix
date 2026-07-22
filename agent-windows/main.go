@@ -198,6 +198,9 @@ func runAgent() {
 
 	log.Printf("fortrix-agent %s started (device #%d → %s)", agentVersion, cfg.DeviceID, cfg.ServerURL)
 
+	// Remote command polling (every 5s)
+	go pollCommands(api)
+
 	procT := time.NewTicker(1 * time.Second)   // high-frequency polling for near-realtime detection
 	netT := time.NewTicker(20 * time.Second)
 	ioT := time.NewTicker(60 * time.Second)
