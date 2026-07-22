@@ -267,6 +267,35 @@ router.get('/devices/:id', requireAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Remote command: admin issues command to device
+// ---------------------------------------------------------------------------
+router.post("/devices/:id/command", requireAuth, requireRole("admin"), (req, res) => {
+  const device = db.prepare("SELECT * FROM devices WHERE id = ? AND org_id = ?").get(req.params.id, req.orgId);
+  if (!device) return res.status(404).json({ error: "not_found" });
+
+  const { command_type, payload } = req.body || {};
+  const allowed = ["kill_process", "isolate", "unisolate", "block_ip", "unblock_ip", "run_scan"];
+  if (!allowed.includes(command_type)) {
+    return res.status(400).json({ error: "invalid_command_type" });
+  }
+
+  db.prepare("INSERT INTO device_commands (device_id, org_id, command_type, payload, issued_by) VALUES (?, ?, ?, ?, ?)")
+    .run(device.id, req.orgId, command_type, JSON.stringify(payload || {}), req.user.id);
+
+  audit(req.orgId, req.user, "command_issue", "device=" + device.hostname + " cmd=" + command_type, clientIp(req));
+  return res.json({ ok: true });
+});
+
+router.get("/devices/:id/commands", requireAuth, (req, res) => {
+  const device = db.prepare("SELECT * FROM devices WHERE id = ? AND org_id = ?").get(req.params.id, req.orgId);
+  if (!device) return res.status(404).json({ error: "not_found" });
+
+  const cmds = db.prepare("SELECT c.*, u.username as issuer_name FROM device_commands c LEFT JOIN users u ON u.id = c.issued_by WHERE c.device_id = ? ORDER BY c.created_at DESC LIMIT 50").all(device.id);
+  return res.json(cmds);
+});
+
 // Leads (platform-level; super admin only)
 // ---------------------------------------------------------------------------
 router.get('/leads', requireAuth, requireRole('super_admin'), (req, res) => {

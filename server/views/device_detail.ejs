@@ -62,6 +62,98 @@
   </div>
 </div>
 
+<!-- Respond panel -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-sm font-semibold text-white">Respond</h3>
+    <div id="cmdStatus" class="text-xs text-slate-500 hidden"></div>
+  </div>
+  <div class="flex flex-wrap gap-2 mb-4">
+    <button onclick="issueCmd(\"isolate\")" class="px-3 py-1.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed">
+      Isolate Network
+    </button>
+    <button onclick="issueCmd(\"unisolate\")" class="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed">
+      Restore Network
+    </button>
+    <button onclick="promptKillProcess()" class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-medium hover:bg-amber-500/20 transition disabled:opacity-40 disabled:cursor-not-allowed">
+      Kill Process
+    </button>
+    <button onclick="issueCmd(\"run_scan\")" class="px-3 py-1.5 rounded-xl bg-accent/15 border border-accent/30 text-accent text-xs font-medium hover:bg-accent/20 transition disabled:opacity-40 disabled:cursor-not-allowed">
+      Run Scan
+    </button>
+  </div>
+  <div id="cmdHistory" class="text-xs text-slate-500">Loading commandsâ€¦</div>
+</div>
+
+<script>
+const deviceId = "<%= device.id %>";
+
+function issueCmd(type, payload) {
+  payload = payload || {};
+  var btns = document.querySelectorAll("button");
+  btns.forEach(function(b) { b.disabled = true; });
+  document.getElementById("cmdStatus").classList.remove("hidden");
+  document.getElementById("cmdStatus").textContent = "Sending " + type + "â€¦";
+  fetch("/app/devices/" + deviceId + "/command", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command_type: type, payload: payload })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      document.getElementById("cmdStatus").textContent = "Command " + type + " queued.";
+      loadCommands();
+    } else {
+      document.getElementById("cmdStatus").textContent = "Error: " + (data.error || "unknown");
+    }
+    btns.forEach(function(b) { b.disabled = false; });
+  })
+  .catch(function(err) {
+    document.getElementById("cmdStatus").textContent = "Network error.";
+    btns.forEach(function(b) { b.disabled = false; });
+  });
+}
+
+function promptKillProcess() {
+  var pid = prompt("Enter Process ID (PID) to kill:");
+  if (pid && /^\d+$/.test(pid.trim())) {
+    issueCmd("kill_process", { pid: parseInt(pid.trim()) });
+  } else if (pid) {
+    alert("Invalid PID. Must be a number.");
+  }
+}
+
+function loadCommands() {
+  fetch("/app/devices/" + deviceId + "/commands")
+    .then(function(r) { return r.json(); })
+    .then(function(cmds) {
+      if (!cmds.length) {
+        document.getElementById("cmdHistory").innerHTML = "<span class=\"text-slate-600\">No commands issued yet.</span>";
+        return;
+      }
+      var html = "<table class=\"w-full text-xs\"><thead><tr class=\"text-left uppercase tracking-wider text-slate-600 border-b border-line\"><th class=\"py-1.5 pr-3\">Type</th><th class=\"py-1.5 pr-3\">Status</th><th class=\"py-1.5 pr-3\">Result</th><th class=\"py-1.5\">Created</th></tr></thead><tbody>";
+      cmds.forEach(function(c) {
+        var stColor = c.status === "success" ? "text-emerald-400" : c.status === "failed" ? "text-red-400" : c.status === "sent" ? "text-amber-300" : "text-slate-500";
+        html += "<tr class=\"border-b border-line/30\"><td class=\"py-1.5 pr-3 font-mono text-slate-300\">" + c.command_type + "</td><td class=\"py-1.5 pr-3\"><span class=\"" + stColor + "\">" + c.status + "</span></td><td class=\"py-1.5 pr-3 text-slate-500\">" + (c.result ? c.result.substring(0, 80) : "â€”") + "</td><td class=\"py-1.5 text-slate-600\" data-ts=\"" + c.created_at + "\">" + c.created_at + "</td></tr>";
+      });
+      html += "</tbody></table>";
+      document.getElementById("cmdHistory").innerHTML = html;
+      if (window.lucide) lucide.createIcons();
+    })
+    .catch(function(err) {
+      document.getElementById("cmdHistory").innerHTML = "<span class=\"text-red-400\">Failed to load commands.</span>";
+    });
+}
+
+// Load on page ready
+document.addEventListener("DOMContentLoaded", function() {
+  loadCommands();
+  // Auto-refresh every 10s
+  setInterval(loadCommands, 10000);
+});
+</script>
+
 <!-- Heartbeat metrics chart -->
 <div class="bg-panel border border-line rounded-2xl p-5">
   <h3 class="text-sm font-semibold text-white mb-4">Heartbeat metrics — CPU / Memory</h3>

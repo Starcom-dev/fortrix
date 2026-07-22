@@ -253,6 +253,31 @@ router.get('/agent/version', (req, res) => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Remote commands — agent polls for pending, reports results
+// ---------------------------------------------------------------------------
+router.get('/commands/pending', (req, res) => {
+  const cmds = db.prepare(
+    "SELECT id, command_type, payload FROM device_commands WHERE device_id = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 5"
+  ).all(req.device.id);
+  if (cmds.length > 0) {
+    const ids = cmds.map(function(c) { return c.id; });
+    db.prepare("UPDATE device_commands SET status = 'sent' WHERE id IN (" + ids.map(function() { return '?'; }).join(',') + ")")
+      .run.apply(null, ids);
+  }
+  return res.json(cmds);
+});
+
+router.post('/commands/:id/result', (req, res) => {
+  var id = req.params.id;
+  var body = req.body || {};
+  var cmd = db.prepare("SELECT * FROM device_commands WHERE id = ? AND device_id = ?").get(id, req.device.id);
+  if (!cmd) return res.status(404).json({ error: 'not_found' });
+  var finalStatus = body.status === 'success' ? 'success' : 'failed';
+  db.prepare("UPDATE device_commands SET status = ?, result = ?, executed_at = datetime('now') WHERE id = ?")
+    .run(finalStatus, String(body.result || '').slice(0, 4000), id);
+  return res.json({ ok: true });
+});
 function compareVersions(a, b) {
   const pa = a.split('.').map(Number);
   const pb = b.split('.').map(Number);
