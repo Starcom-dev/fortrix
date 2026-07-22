@@ -632,6 +632,83 @@ router.get('/audit', requireAuth, requireRole('owner'), (req, res) => {
   res.render('audit', { title: 'Audit Log', active: 'audit', entries });
 });
 
+
+// ---------------------------------------------------------------------------
+// Protect Rules â€” auto-protect configuration
+// ---------------------------------------------------------------------------
+router.get("/protect", requireAuth, requireRole("admin"), (req, res) => {
+  const rules = db.prepare("SELECT * FROM protect_rules WHERE org_id = ? ORDER BY created_at DESC").all(req.orgId);
+  res.render("protect", { title: "Protect Rules", active: "protect", rules });
+});
+
+router.post("/protect", requireAuth, requireRole("admin"), (req, res) => {
+  const { name, event_type, condition_json, action_type, action_payload, enabled } = req.body || {};
+  if (!name || !event_type || !action_type) {
+    req.session.flash = { type: "error", message: "Name, event type, and action are required." };
+    return res.redirect("/app/protect");
+  }
+  db.prepare(
+    "INSERT INTO protect_rules (org_id, name, event_type, condition_json, action_type, action_payload, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(req.orgId, String(name).slice(0, 128), event_type, String(condition_json || "{}").slice(0, 2000), action_type, String(action_payload || "{}").slice(0, 2000), enabled === "1" ? 1 : 0);
+  audit(req.orgId, req.user, "protect_rule_create", "name=" + String(name).slice(0, 64), clientIp(req));
+  req.session.flash = { type: "success", message: "Protect rule created." };
+  res.redirect("/app/protect");
+});
+
+router.post("/protect/:id/toggle", requireAuth, requireRole("admin"), (req, res) => {
+  const rule = db.prepare("SELECT * FROM protect_rules WHERE id = ? AND org_id = ?").get(req.params.id, req.orgId);
+  if (!rule) return res.status(404).json({ error: "not_found" });
+  db.prepare("UPDATE protect_rules SET enabled = ? WHERE id = ?").run(rule.enabled ? 0 : 1, rule.id);
+  audit(req.orgId, req.user, "protect_rule_toggle", "rule=" + rule.name + " enabled=" + (rule.enabled ? 0 : 1), clientIp(req));
+  return res.json({ ok: true });
+});
+
+router.post("/protect/:id/delete", requireAuth, requireRole("owner"), (req, res) => {
+  const rule = db.prepare("SELECT * FROM protect_rules WHERE id = ? AND org_id = ?").get(req.params.id, req.orgId);
+  if (!rule) return res.status(404).json({ error: "not_found" });
+  db.prepare("DELETE FROM protect_rules WHERE id = ?").run(rule.id);
+  audit(req.orgId, req.user, "protect_rule_delete", "name=" + rule.name, clientIp(req));
+  return res.json({ ok: true });
+});
+
+// ---------------------------------------------------------------------------
+// Application Control â€” whitelist / blacklist policies
+// ---------------------------------------------------------------------------
+router.get("/app-control", requireAuth, requireRole("admin"), (req, res) => {
+  const policies = db.prepare("SELECT * FROM app_policies WHERE org_id = ? ORDER BY created_at DESC").all(req.orgId);
+  res.render("app_control", { title: "App Control", active: "app_control", policies });
+});
+
+router.post("/app-control", requireAuth, requireRole("admin"), (req, res) => {
+  const { name, policy_type, match_type, match_value, action, enabled } = req.body || {};
+  if (!name || !policy_type || !match_type || !match_value) {
+    req.session.flash = { type: "error", message: "All fields are required." };
+    return res.redirect("/app/app-control");
+  }
+  db.prepare(
+    "INSERT INTO app_policies (org_id, name, policy_type, match_type, match_value, action, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(req.orgId, String(name).slice(0, 128), policy_type, match_type, String(match_value).slice(0, 512), action || "alert", enabled === "1" ? 1 : 0);
+  audit(req.orgId, req.user, "app_policy_create", "name=" + String(name).slice(0, 64) + " type=" + policy_type, clientIp(req));
+  req.session.flash = { type: "success", message: "App policy created." };
+  res.redirect("/app/app-control");
+});
+
+router.post("/app-control/:id/toggle", requireAuth, requireRole("admin"), (req, res) => {
+  const pol = db.prepare("SELECT * FROM app_policies WHERE id = ? AND org_id = ?").get(req.params.id, req.orgId);
+  if (!pol) return res.status(404).json({ error: "not_found" });
+  db.prepare("UPDATE app_policies SET enabled = ? WHERE id = ?").run(pol.enabled ? 0 : 1, pol.id);
+  audit(req.orgId, req.user, "app_policy_toggle", "policy=" + pol.name, clientIp(req));
+  return res.json({ ok: true });
+});
+
+router.post("/app-control/:id/delete", requireAuth, requireRole("owner"), (req, res) => {
+  const pol = db.prepare("SELECT * FROM app_policies WHERE id = ? AND org_id = ?").get(req.params.id, req.orgId);
+  if (!pol) return res.status(404).json({ error: "not_found" });
+  db.prepare("DELETE FROM app_policies WHERE id = ?").run(pol.id);
+  audit(req.orgId, req.user, "app_policy_delete", "name=" + pol.name, clientIp(req));
+  return res.json({ ok: true });
+});
+
 module.exports = router;
 
 // ---------------------------------------------------------------------------

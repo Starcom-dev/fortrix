@@ -1,0 +1,93 @@
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-sm font-semibold text-white">Application Control</h2>
+  <span class="text-xs text-slate-500"><%= policies.length %> polic<%= policies.length === 1 ? 'y' : 'ies' %></span>
+</div>
+
+<p class="text-xs text-slate-500 mb-4">Whitelist or blacklist applications by path, file hash, or digital signature. Blacklisted apps trigger alerts. Whitelist mode blocks anything not on the list.</p>
+
+<!-- Add Policy -->
+<div class="bg-panel2 border border-line rounded-2xl p-4 mb-5">
+  <h3 class="text-xs font-semibold text-white mb-3">Add Policy</h3>
+  <form method="post" action="/app/app-control" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <input name="name" placeholder="Policy name" required maxlength="128"
+           class="px-3 py-2 rounded-xl bg-ink border border-line text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60" />
+    <select name="policy_type" required
+            class="px-3 py-2 rounded-xl bg-ink border border-line text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+      <option value="">Type</option>
+      <option value="blacklist">Blacklist</option>
+      <option value="whitelist">Whitelist</option>
+    </select>
+    <select name="match_type" required
+            class="px-3 py-2 rounded-xl bg-ink border border-line text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+      <option value="">Match by</option>
+      <option value="path">File Path</option>
+      <option value="hash">SHA256 Hash</option>
+      <option value="signature">Code Signature</option>
+    </select>
+    <input name="match_value" placeholder="e.g. C:\tools\*.exe or hash" required maxlength="512"
+           class="px-3 py-2 rounded-xl bg-ink border border-line text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/60 font-mono text-xs" />
+    <select name="action" class="px-3 py-2 rounded-xl bg-ink border border-line text-sm text-slate-200 focus:outline-none focus:border-accent/60">
+      <option value="alert">Alert</option>
+      <option value="block">Alert + Block</option>
+    </select>
+    <div class="md:col-span-4 flex items-center gap-3">
+      <label class="flex items-center gap-2 text-xs text-slate-400">
+        <input type="checkbox" name="enabled" value="1" checked class="rounded bg-ink border-line" /> Enabled
+      </label>
+      <button type="submit" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-xs font-semibold transition">Add Policy</button>
+    </div>
+  </form>
+</div>
+
+<!-- Policies List -->
+<% if (policies.length === 0) { %>
+  <div class="text-sm text-slate-500 py-10 text-center">No application policies defined yet.</div>
+<% } else { %>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+          <th class="py-2.5 pr-4 font-medium">Name</th>
+          <th class="py-2.5 pr-4 font-medium">Type</th>
+          <th class="py-2.5 pr-4 font-medium">Match</th>
+          <th class="py-2.5 pr-4 font-medium">Value</th>
+          <th class="py-2.5 pr-4 font-medium">Action</th>
+          <th class="py-2.5 pr-4 font-medium">Status</th>
+          <th class="py-2.5 font-medium"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const p of policies) { %>
+          <tr class="border-b border-line/50 hover:bg-panel2/60">
+            <td class="py-2.5 pr-4 text-slate-300"><%= p.name %></td>
+            <td class="py-2.5 pr-4">
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= p.policy_type === 'blacklist' ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' %>"><%= p.policy_type %></span>
+            </td>
+            <td class="py-2.5 pr-4 text-xs text-slate-400"><%= p.match_type %></td>
+            <td class="py-2.5 pr-4 font-mono text-xs text-slate-500 max-w-[200px] truncate"><%= p.match_value %></td>
+            <td class="py-2.5 pr-4 text-xs text-slate-400"><%= p.action %></td>
+            <td class="py-2.5 pr-4">
+              <button onclick="togglePolicy(<%= p.id %>)" class="<%= p.enabled ? 'text-emerald-400' : 'text-slate-600' %> text-xs hover:underline"><%= p.enabled ? 'ON' : 'OFF' %></button>
+            </td>
+            <td class="py-2.5">
+              <% if (roleRank >= 3) { %>
+                <button onclick="deletePolicy(<%= p.id %>)" class="text-red-400 text-xs hover:underline">Delete</button>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<script>
+function togglePolicy(id) {
+  fetch("/app/app-control/" + id + "/toggle", { method: "POST" }).then(function() { location.reload(); });
+}
+function deletePolicy(id) {
+  if (confirm("Delete this policy?")) {
+    fetch("/app/app-control/" + id + "/delete", { method: "POST" }).then(function() { location.reload(); });
+  }
+}
+</script>

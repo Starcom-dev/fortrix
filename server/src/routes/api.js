@@ -198,6 +198,30 @@ router.post('/events', (req, res) => {
           } catch (err) {
             console.error('[fortrix] alert email hook failed:', err.message);
           }
+
+        // Auto-Protect: check rules and issue commands
+        setImmediate(() => {
+          try {
+            const rules = db.prepare(
+              "SELECT * FROM protect_rules WHERE org_id = ? AND event_type = ? AND enabled = 1"
+            ).all(req.device.org_id, type);
+            for (const rule of rules) {
+              if (matchProtectRule(rule, evt, alert)) {
+                if (rule.action_type !== "alert_only") {
+                  db.prepare(
+                    "INSERT INTO device_commands (device_id, org_id, command_type, payload, issued_by) VALUES (?, ?, ?, ?, 0)"
+                  ).run(req.device.id, req.device.org_id, rule.action_type, rule.action_payload);
+                  audit(req.device.org_id, null, "auto_protect",
+                    "device=" + req.device.hostname + " rule=" + rule.name + " action=" + rule.action_type +
+                    " alert=" + alert.rule, "");
+                }
+              }
+            }
+          } catch (err2) {
+            console.error("[fortrix] auto-protect hook failed:", err2.message);
+          }
+        });
+
         });
       }
     }
@@ -295,6 +319,27 @@ function osToPlatform(os) {
   if (s.includes('windows')) return 'windows';
   if (s.includes('darwin') || s.includes('mac')) return 'darwin';
   return 'linux';
+}
+
+
+// ---------------------------------------------------------------------------
+// Auto-Protect rule matcher
+// ---------------------------------------------------------------------------
+function matchProtectRule(rule, evt, alert) {
+  if (!alert) return false;
+  try {
+    var cond = JSON.parse(rule.condition_json || "{}");
+    if (cond.severity && alert.severity !== cond.severity) return false;
+    if (cond.min_mb && evt.data && evt.data.mb !== undefined && Number(evt.data.mb) < cond.min_mb) return false;
+    if (cond.min_count && evt.data && evt.data.count !== undefined && Number(evt.data.count) < cond.min_count) return false;
+    if (cond.port_not) {
+      var blocked = cond.port_not.split(",").map(function(p) { return p.trim(); });
+      if (evt.data && evt.data.remote_port !== undefined && blocked.indexOf(String(evt.data.remote_port)) !== -1) return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 module.exports = router;
