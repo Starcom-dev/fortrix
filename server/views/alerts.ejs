@@ -50,7 +50,7 @@
           <% for (const a of alerts) { %>
             <tr class="border-b border-line/50 hover:bg-panel2/60">
               <td class="py-2.5 pr-4"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= sevBadge(a.severity) %>"><%= a.severity %></span></td>
-              <td class="py-2.5 pr-4 text-slate-200"><%= a.title %></td>
+              <td class="py-2.5 pr-4"><a href="/app/alerts/<%= a.id %>" class="text-accent hover:underline font-medium"><%= a.title %></a></td>
               <td class="py-2.5 pr-4"><a class="text-accent hover:underline" href="/app/devices/<%= a.device_id %>"><%= a.hostname %></a></td>
               <td class="py-2.5 pr-4 text-slate-400 font-mono text-xs"><%= a.rule %></td>
               <td class="py-2.5 pr-4"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= statusBadge(a.status) %>"><%= a.status %></span></td>

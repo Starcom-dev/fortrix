@@ -709,6 +709,146 @@ router.post("/app-control/:id/delete", requireAuth, requireRole("owner"), (req, 
   return res.json({ ok: true });
 });
 
+
+// ---------------------------------------------------------------------------
+// Alert Detail â€” full incident view
+// ---------------------------------------------------------------------------
+router.get("/alerts/:id", requireAuth, (req, res) => {
+  const alert = db.prepare(`
+    SELECT a.*, d.hostname, d.os, d.ip, d.status as device_status, d.enrolled_at as device_enrolled
+    FROM alerts a JOIN devices d ON d.id = a.device_id
+    WHERE a.id = ? AND d.org_id = ?
+  `).get(req.params.id, req.orgId);
+  if (!alert) return res.status(404).render("notfound", { title: "Not found", active: "alerts" });
+
+  const events = db.prepare(`
+    SELECT * FROM events WHERE device_id = ? AND created_at BETWEEN datetime(?, "-5 minutes") AND datetime(?, "+5 minutes")
+    ORDER BY created_at DESC LIMIT 30
+  `).all(alert.device_id, alert.created_at, alert.created_at);
+
+  const commands = db.prepare(`
+    SELECT c.*, u.username as issuer_name FROM device_commands c
+    LEFT JOIN users u ON u.id = c.issued_by
+    WHERE c.device_id = ? AND c.created_at >= datetime(?, "-15 minutes")
+    ORDER BY c.created_at DESC
+  `).all(alert.device_id, alert.created_at);
+
+  res.render("alert_detail", {
+    title: "Alert Detail", active: "alerts", alert, events, commands,
+    remediation: getRemediation(alert.rule || alert.title)
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Incident Report â€” printable / PDF-friendly
+// ---------------------------------------------------------------------------
+router.get("/alerts/:id/report", requireAuth, (req, res) => {
+  const alert = db.prepare(`
+    SELECT a.*, d.hostname, d.os, d.arch, d.ip, d.agent_version, d.status as device_status,
+           d.enrolled_at as device_enrolled, d.last_seen, d.endpoint_id
+    FROM alerts a JOIN devices d ON d.id = a.device_id
+    WHERE a.id = ? AND d.org_id = ?
+  `).get(req.params.id, req.orgId);
+  if (!alert) return res.status(404).render("notfound", { title: "Not found", active: "alerts" });
+
+  const events = db.prepare(`
+    SELECT * FROM events WHERE device_id = ?
+    ORDER BY created_at DESC LIMIT 100
+  `).all(alert.device_id);
+
+  const commands = db.prepare(`
+    SELECT c.*, u.username as issuer_name FROM device_commands c
+    LEFT JOIN users u ON u.id = c.issued_by
+    WHERE c.device_id = ? ORDER BY c.created_at DESC LIMIT 20
+  `).all(alert.device_id);
+
+  const heartbeats = db.prepare(`
+    SELECT * FROM heartbeats WHERE device_id = ?
+    ORDER BY created_at DESC LIMIT 60
+  `).all(alert.device_id);
+
+  const alertHistory = db.prepare(`
+    SELECT * FROM alerts WHERE device_id = ? ORDER BY created_at DESC LIMIT 20
+  `).all(alert.device_id);
+
+  res.render("incident_report", {
+    title: "Incident Report", active: "alerts", alert, events, commands, heartbeats, alertHistory,
+    remediation: getRemediation(alert.rule || alert.title),
+    reportMeta: {
+      generated: new Date().toISOString(),
+      org: req.org.name,
+      generatedBy: req.user.username
+    },
+    layout: false
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Remediation guides â€” mapping alert rules to recommended actions
+// ---------------------------------------------------------------------------
+function getRemediation(rule) {
+  const key = (rule || "").toLowerCase();
+  if (key.includes("read_burst") || key.includes("fs.read") || key.includes("exfil")) {
+    return {
+      summary: "Mass file read detected â€” possible data exfiltration in progress.",
+      steps: [
+        "Isolate the endpoint from the network immediately.",
+        "Identify the process responsible â€” check the Events tab for the process name.",
+        "Kill the suspicious process from the device detail page.",
+        "Check what files were accessed â€” review file paths in event data.",
+        "Reset user credentials if sensitive files were involved.",
+        "Restore network access only after confirming the threat is neutralized."
+      ]
+    };
+  }
+  if (key.includes("net.outbound") || key.includes("outbound")) {
+    return {
+      summary: "Suspicious outbound network connection detected.",
+      steps: [
+        "Block the remote IP from the device detail page.",
+        "Identify the process making the connection from Events.",
+        "Check if the destination IP is known malicious (use threat intel).",
+        "Consider isolating the device if multiple suspicious connections occur.",
+        "Review firewall logs for other connections from this device."
+      ]
+    };
+  }
+  if (key.includes("proc.new") || key.includes("suspicious_process")) {
+    return {
+      summary: "A new or suspicious process was detected on the endpoint.",
+      steps: [
+        "Check the process name and path in the event data.",
+        "If unrecognized, kill the process from the device detail page.",
+        "Check if the process has a valid digital signature.",
+        "Add the process hash to the App Control blacklist if confirmed malicious.",
+        "Scan the endpoint for additional malware or persistence mechanisms."
+      ]
+    };
+  }
+  if (key.includes("clipboard")) {
+    return {
+      summary: "Abnormal clipboard activity detected â€” possible clipboard scraping.",
+      steps: [
+        "Investigate which process is accessing the clipboard.",
+        "Check if any sensitive data may have been in the clipboard.",
+        "Kill the suspicious process if identified.",
+        "Remind users not to copy sensitive data to clipboard.",
+        "Monitor for repeated clipboard alerts from this device."
+      ]
+    };
+  }
+  return {
+    summary: "A security alert was triggered. Investigate and respond accordingly.",
+    steps: [
+      "Review the alert details and associated events.",
+      "Determine if the alert represents a real threat or false positive.",
+      "Acknowledge the alert and assign it for investigation.",
+      "Take appropriate response actions: isolate, kill process, or block IP.",
+      "Document findings and mark alert as resolved when complete."
+    ]
+  };
+}
+
 module.exports = router;
 
 // ---------------------------------------------------------------------------

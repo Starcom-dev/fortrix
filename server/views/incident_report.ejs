@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Incident Report â€” <%= alert.hostname %> â€” Fortrix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{ink:'#0a0e1a',panel:'#10162a',panel2:'#141c33',line:'#1e2742',accent:'#4f6ef7',}}}};</script>
+  <style>
+    body { background: #fff; color: #1a1a2e; font-family: 'Inter', system-ui, sans-serif; }
+    .dark-bg { background: #0a0e1a; }
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+  <!-- Print controls -->
+  <div class="no-print bg-slate-800 text-white px-4 py-2 flex items-center justify-between text-xs">
+    <span>Incident Report Â· <%= reportMeta.org %></span>
+    <div class="flex gap-2">
+      <button onclick="window.print()" class="px-3 py-1 rounded bg-accent hover:bg-accent/90 text-white font-medium">Print / Save PDF</button>
+      <a href="/app/alerts/<%= alert.id %>" class="px-3 py-1 rounded bg-slate-600 hover:bg-slate-500 text-white">Back to Alert</a>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto p-6 md:p-10">
+    <!-- Header -->
+    <div class="border-b-2 border-slate-200 pb-6 mb-8">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">FORTRIX â€” Incident Report</h1>
+          <p class="text-xs text-slate-500 mt-1">Generated: <%= new Date(reportMeta.generated).toLocaleString() %> by <%= reportMeta.generatedBy %></p>
+        </div>
+        <div class="text-right text-xs text-slate-500">
+          <div class="font-semibold text-slate-700"><%= reportMeta.org %></div>
+          <div>Confidential</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="mb-8">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Executive Summary</h2>
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-sm text-slate-700">
+        <p class="mb-2">On <strong><%= alert.created_at %></strong>, Fortrix detected a <strong class="text-red-600"><%= alert.severity %></strong> severity alert on device <strong><%= alert.hostname %></strong> (<%= alert.endpoint_id || 'N/A' %>).</p>
+        <p class="mb-2">Alert: <strong>"<%= alert.title || alert.rule %>"</strong></p>
+        <p><strong>Current status:</strong> <%= alert.status.toUpperCase() %> Â· <strong>Finding:</strong> <%= remediation.summary %></p>
+      </div>
+    </div>
+
+    <!-- Device Information -->
+    <div class="mb-8">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Device Information</h2>
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600 w-40">Hostname</td><td class="px-4 py-2 text-slate-800"><%= alert.hostname %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Endpoint ID</td><td class="px-4 py-2 font-mono text-xs text-slate-800"><%= alert.endpoint_id || 'â€”' %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">OS</td><td class="px-4 py-2 text-slate-800"><%= alert.os %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Architecture</td><td class="px-4 py-2 text-slate-800"><%= alert.arch || 'â€”' %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Agent Version</td><td class="px-4 py-2 font-mono text-xs text-slate-800"><%= alert.agent_version || 'â€”' %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">IP Address</td><td class="px-4 py-2 font-mono text-xs text-slate-800"><%= alert.ip || 'â€”' %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Status</td><td class="px-4 py-2"><span class="<%= alert.device_status === 'online' ? 'text-emerald-600' : 'text-slate-400' %> font-medium"><%= alert.device_status %></span></td></tr>
+          <tr><td class="px-4 py-2 font-medium text-slate-600">Last Seen</td><td class="px-4 py-2 text-slate-800"><%= alert.last_seen %></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Alert Detail -->
+    <div class="mb-8 page-break">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Alert Detail</h2>
+      <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600 w-40">Alert ID</td><td class="px-4 py-2 font-mono text-xs text-slate-800">#<%= alert.id %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Rule</td><td class="px-4 py-2 font-mono text-xs text-slate-800"><%= alert.rule %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Title</td><td class="px-4 py-2 text-slate-800"><%= alert.title %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Severity</td><td class="px-4 py-2 text-red-600 font-bold uppercase"><%= alert.severity %></td></tr>
+          <tr class="border-b border-slate-100"><td class="px-4 py-2 font-medium text-slate-600">Status</td><td class="px-4 py-2 font-bold uppercase"><%= alert.status %></td></tr>
+          <tr><td class="px-4 py-2 font-medium text-slate-600">Detected At</td><td class="px-4 py-2 text-slate-800"><%= alert.created_at %> UTC</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Remediation Guide -->
+    <div class="mb-8 page-break">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Remediation Guide</h2>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+        <p class="text-sm text-amber-800 font-medium mb-3"><%= remediation.summary %></p>
+        <ol class="space-y-2">
+          <% for (const step of remediation.steps) { %>
+            <li class="flex items-start gap-2 text-sm text-slate-700">
+              <span class="font-bold text-accent"><%= remediation.steps.indexOf(step) + 1 %>.</span>
+              <span><%= step %></span>
+            </li>
+          <% } %>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Event Timeline -->
+    <div class="mb-8 page-break">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Event Log (<%= events.length %> events)</h2>
+      <% if (events.length > 0) { %>
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <th class="px-4 py-2 font-medium">Time (UTC)</th><th class="px-4 py-2 font-medium">Type</th><th class="px-4 py-2 font-medium">Severity</th><th class="px-4 py-2 font-medium">Data</th>
+            </tr></thead>
+            <tbody>
+              <% for (const e of events) { %>
+                <tr class="border-b border-slate-100 align-top">
+                  <td class="px-4 py-2 text-slate-500 text-xs whitespace-nowrap"><%= e.created_at %></td>
+                  <td class="px-4 py-2 font-mono text-xs text-slate-700"><%= e.type %></td>
+                  <td class="px-4 py-2 text-xs font-medium uppercase text-slate-500"><%= e.severity %></td>
+                  <td class="px-4 py-2 font-mono text-[10px] text-slate-500 break-all"><%= e.data.length > 200 ? e.data.slice(0, 200) + 'â€¦' : e.data %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-sm text-slate-400">No events recorded.</p>
+      <% } %>
+    </div>
+
+    <!-- Commands Issued -->
+    <div class="mb-8 page-break">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Response Actions</h2>
+      <% if (commands.length > 0) { %>
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <th class="px-4 py-2 font-medium">Time</th><th class="px-4 py-2 font-medium">Command</th><th class="px-4 py-2 font-medium">Issued By</th><th class="px-4 py-2 font-medium">Status</th><th class="px-4 py-2 font-medium">Result</th>
+            </tr></thead>
+            <tbody>
+              <% for (const c of commands) { %>
+                <tr class="border-b border-slate-100 align-top">
+                  <td class="px-4 py-2 text-slate-500 text-xs whitespace-nowrap"><%= c.created_at %></td>
+                  <td class="px-4 py-2 font-mono text-xs text-slate-700"><%= c.command_type %></td>
+                  <td class="px-4 py-2 text-xs text-slate-600"><%= c.issuer_name || 'auto-protect' %></td>
+                  <td class="px-4 py-2 text-xs font-medium <%= c.status === 'success' ? 'text-emerald-600' : c.status === 'failed' ? 'text-red-600' : 'text-slate-400' %>"><%= c.status %></td>
+                  <td class="px-4 py-2 font-mono text-[10px] text-slate-500"><%= c.result || 'â€”' %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-sm text-slate-400">No response actions were taken.</p>
+      <% } %>
+    </div>
+
+    <!-- Alert History -->
+    <div class="mb-8">
+      <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Device Alert History (<%= alertHistory.length %> alerts)</h2>
+      <% if (alertHistory.length > 0) { %>
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <th class="px-4 py-2 font-medium">Time</th><th class="px-4 py-2 font-medium">Rule</th><th class="px-4 py-2 font-medium">Severity</th><th class="px-4 py-2 font-medium">Status</th>
+            </tr></thead>
+            <tbody>
+              <% for (const a of alertHistory) { %>
+                <tr class="border-b border-slate-100 <%= a.id === alert.id ? 'bg-amber-50' : '' %>">
+                  <td class="px-4 py-2 text-slate-500 text-xs whitespace-nowrap"><%= a.created_at %></td>
+                  <td class="px-4 py-2 font-mono text-xs text-slate-700"><%= a.rule %></td>
+                  <td class="px-4 py-2 text-xs font-medium uppercase text-slate-500"><%= a.severity %></td>
+                  <td class="px-4 py-2 text-xs font-medium uppercase"><%= a.status %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t-2 border-slate-200 pt-4 mt-10 text-xs text-slate-400">
+      <p>Report generated by Fortrix Endpoint Protection Platform Â· <%= reportMeta.org %> Â· Confidential</p>
+      <p>Generated: <%= new Date(reportMeta.generated).toLocaleString() %> Â· Generated by: <%= reportMeta.generatedBy %></p>
+    </div>
+  </div>
+</body>
+</html>

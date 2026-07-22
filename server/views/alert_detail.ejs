@@ -1,0 +1,118 @@
+<div class="flex items-center gap-2 text-xs text-slate-500 mb-4">
+  <a href="/app/alerts" class="text-accent hover:underline">Alerts</a>
+  <span>/</span>
+  <span class="text-slate-300"><%= alert.rule || alert.title %></span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <!-- Alert Info -->
+  <div class="bg-panel border border-line rounded-2xl p-5 lg:col-span-2">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= sevBadge(alert.severity) %>"><%= alert.severity %></span>
+          <span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= statusBadge(alert.status) %>"><%= alert.status %></span>
+        </div>
+        <h2 class="text-lg font-semibold text-white"><%= alert.title || alert.rule %></h2>
+        <div class="text-xs text-slate-500 mt-1">
+          <a href="/app/devices/<%= alert.device_id %>" class="text-accent hover:underline"><%= alert.hostname %></a>
+          Â· <%= alert.os %> Â· IP: <%= alert.ip || 'â€”' %>
+        </div>
+      </div>
+      <a href="/app/alerts/<%= alert.id %>/report" class="px-3 py-1.5 rounded-xl bg-accent/15 border border-accent/30 text-accent text-xs font-medium hover:bg-accent/20 transition">ðŸ“„ Report</a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+      <div><div class="text-[10px] text-slate-500 uppercase">Created</div><div class="text-xs text-slate-300" data-ts="<%= alert.created_at %>"><%= alert.created_at %></div></div>
+      <div><div class="text-[10px] text-slate-500 uppercase">Device</div><div class="text-xs text-slate-300"><%= alert.hostname %></div></div>
+      <div><div class="text-[10px] text-slate-500 uppercase">Rule</div><div class="text-xs font-mono text-slate-400"><%= alert.rule %></div></div>
+      <div><div class="text-[10px] text-slate-500 uppercase">Status</div><div class="text-xs text-slate-300"><%= alert.status %></div></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="bg-panel border border-line rounded-2xl p-5">
+    <h3 class="text-sm font-semibold text-white mb-3">Actions</h3>
+    <div class="space-y-2">
+      <% if (alert.status === 'open') { %>
+        <form method="post" action="/app/alerts/<%= alert.id %>/status" class="flex gap-2">
+          <input type="hidden" name="status" value="ack" />
+          <button type="submit" class="flex-1 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-medium hover:bg-amber-500/20 transition">Acknowledge</button>
+        </form>
+      <% } %>
+      <% if (alert.status === 'open' || alert.status === 'ack') { %>
+        <form method="post" action="/app/alerts/<%= alert.id %>/status">
+          <input type="hidden" name="status" value="resolved" />
+          <button type="submit" class="w-full px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition">Mark Resolved</button>
+        </form>
+      <% } %>
+      <a href="/app/devices/<%= alert.device_id %>" class="block text-center px-3 py-1.5 rounded-xl bg-accent/15 border border-accent/30 text-accent text-xs font-medium hover:bg-accent/20 transition">View Device</a>
+    </div>
+  </div>
+</div>
+
+<!-- Remediation -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h3 class="text-sm font-semibold text-white mb-3">Remediation Guide</h3>
+  <p class="text-xs text-slate-400 mb-3"><%= remediation.summary %></p>
+  <ol class="space-y-1.5">
+    <% for (const step of remediation.steps) { %>
+      <li class="flex items-start gap-2 text-xs text-slate-300">
+        <span class="text-accent font-medium"><%= remediation.steps.indexOf(step) + 1 %>.</span>
+        <span><%= step %></span>
+      </li>
+    <% } %>
+  </ol>
+</div>
+
+<!-- Related Events Timeline -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h3 class="text-sm font-semibold text-white mb-4">Event Timeline (Â±5 min)</h3>
+  <% if (events.length === 0) { %>
+    <div class="text-xs text-slate-500 py-4 text-center">No related events found.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+          <th class="py-2 pr-3 font-medium">Time</th><th class="py-2 pr-3 font-medium">Type</th><th class="py-2 pr-3 font-medium">Severity</th><th class="py-2 font-medium">Data</th>
+        </tr></thead>
+        <tbody>
+          <% for (const e of events) { %>
+            <tr class="border-b border-line/50 hover:bg-panel2/60 align-top">
+              <td class="py-2 pr-3 text-slate-500 text-xs whitespace-nowrap" data-ts="<%= e.created_at %>"><%= e.created_at %></td>
+              <td class="py-2 pr-3 font-mono text-xs text-slate-200"><%= e.type %></td>
+              <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= sevBadge(e.severity) %>"><%= e.severity %></span></td>
+              <td class="py-2"><code class="text-[11px] text-slate-400 break-all"><%= e.data.length > 120 ? e.data.slice(0, 120) + 'â€¦' : e.data %></code></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<!-- Response Commands -->
+<div class="bg-panel border border-line rounded-2xl p-5">
+  <h3 class="text-sm font-semibold text-white mb-4">Response Commands</h3>
+  <% if (commands.length === 0) { %>
+    <div class="text-xs text-slate-500 py-4 text-center">No commands issued for this incident.</div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+          <th class="py-2 pr-3 font-medium">Time</th><th class="py-2 pr-3 font-medium">Type</th><th class="py-2 pr-3 font-medium">Status</th><th class="py-2 font-medium">Result</th>
+        </tr></thead>
+        <tbody>
+          <% for (const c of commands) { %>
+            <tr class="border-b border-line/50 align-top">
+              <td class="py-2 pr-3 text-slate-500 text-xs whitespace-nowrap" data-ts="<%= c.created_at %>"><%= c.created_at %></td>
+              <td class="py-2 pr-3 font-mono text-xs text-slate-200"><%= c.command_type %></td>
+              <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-lg text-[10px] font-medium <%= c.status === 'success' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : c.status === 'failed' ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-slate-500/15 text-slate-400 border border-slate-500/30' %>"><%= c.status %></span></td>
+              <td class="py-2"><code class="text-[11px] text-slate-400"><%= c.result ? c.result.slice(0, 100) : 'â€”' %></code></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
