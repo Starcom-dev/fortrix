@@ -6,7 +6,8 @@
         <i data-lucide="shield" class="text-accent" style="width:28px;height:28px;"></i>
       </div>
       <h1 class="text-xl font-semibold text-white tracking-wide">FORTRIX</h1>
-      <p class="text-xs uppercase tracking-widest text-slate-500 mt-1">Endpoint Protection Console</p>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mt-1"><%= typeof isCustomerHost !== "undefined" && isCustomerHost ? "Device Security Monitor" : "Endpoint Protection Console" %></p>
+      
     </div>
 
     <div class="bg-panel border border-line rounded-2xl p-6 shadow-2xl shadow-black/40">
@@ -36,6 +37,6 @@
       </form>
     </div>
 
-    <p class="text-center text-xs text-slate-600 mt-6">Fortrix — data exfiltration detection &amp; behavioral monitoring</p>
+    <p class="text-center text-xs text-slate-600 mt-6"><%= typeof isCustomerHost !== "undefined" && isCustomerHost ? "Fortrix — real-time endpoint security monitoring" : "Fortrix — data exfiltration detection & behavioral monitoring" %></p>
   </div>
 </div>

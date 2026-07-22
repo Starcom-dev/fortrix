@@ -68,10 +68,12 @@ function requireAuth(req, res, next) {
   req.org = db.prepare('SELECT * FROM orgs WHERE id = ?').get(orgId) || { id: orgId, name: 'Unknown' };
 
   // View locals (layout sidebar/header).
-  res.locals.currentUser = { id: user.id, username: user.username, role: user.role };
+  
   res.locals.currentOrg = req.org;
   res.locals.roleRank = ROLE_RANK[user.role] || 0;
   res.locals.isSuper = req.isSuper;
+  res.locals.isCustomerHost = (req.get("host") || "").toLowerCase().includes("fortix.my");
+  res.locals.currentUser = { id: user.id, username: user.username, role: user.role };
   res.locals.orgs = req.isSuper ? db.prepare('SELECT id, name FROM orgs ORDER BY name').all() : [];
 
   // One-shot flash message (e.g. generated credentials).
@@ -103,6 +105,21 @@ router.get('/login', (req, res) => {
 
 router.post('/login', rateLimit({ windowMs: 10 * 60 * 1000, max: 10, prefix: 'login' }), (req, res) => {
   const { username, password } = req.body || {};
+  const isCustomerHost = (req.get("host") || "").toLowerCase().includes("fortix.my");
+  if (isCustomerHost) {
+    const userCheck = username
+      ? db.prepare('SELECT role FROM users WHERE username = ? AND active = 1').get(String(username).trim())
+      : null;
+    if (userCheck && userCheck.role === 'super_admin') {
+      return setTimeout(() => {
+        res.status(401).render('login', {
+          layout: 'layout', bare: true, title: 'Sign in',
+          error: 'Super admin must use the admin dashboard at fortrix.xyz.', active: '',
+        });
+      }, 200);
+    }
+  }
+
   const user = username
     ? db.prepare('SELECT * FROM users WHERE username = ? AND active = 1').get(String(username).trim())
     : null;

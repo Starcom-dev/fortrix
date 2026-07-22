@@ -13,6 +13,7 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-line">
+            <th class="py-2.5 pr-4 font-medium">Endpoint ID</th>
             <th class="py-2.5 pr-4 font-medium">Hostname</th>
             <th class="py-2.5 pr-4 font-medium">OS</th>
             <th class="py-2.5 pr-4 font-medium">Arch</th>
@@ -25,6 +26,7 @@
         <tbody>
           <% for (const d of devices) { %>
             <tr class="border-b border-line/50 hover:bg-panel2/60">
+              <td class="py-2.5 pr-4 font-mono text-xs text-slate-300"><%= d.endpoint_id || '—' %></td>
               <td class="py-2.5 pr-4"><a class="text-accent hover:underline font-medium" href="/app/devices/<%= d.id %>"><%= d.hostname %></a></td>
               <td class="py-2.5 pr-4 text-slate-300"><%= d.os || '—' %></td>
               <td class="py-2.5 pr-4 text-slate-400"><%= d.arch || '—' %></td>

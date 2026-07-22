@@ -28,6 +28,16 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false }));
+// ---------------------------------------------------------------------------
+// Host detection — admin vs customer dashboard
+// ---------------------------------------------------------------------------
+app.use((req, res, next) => {
+  const host = (req.get("host") || "").toLowerCase();
+  res.locals.hostname = host;
+  res.locals.isCustomerHost = host.includes("fortix.my");
+  res.locals.isAdminHost = host.includes("fortrix.xyz") || host.startsWith("127.") || host.startsWith("localhost");
+  next();
+});
 
 // ---------------------------------------------------------------------------
 // View helpers
