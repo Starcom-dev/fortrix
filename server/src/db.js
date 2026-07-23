@@ -142,7 +142,77 @@ CREATE TABLE IF NOT EXISTS heartbeats (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_heartbeats_device ON heartbeats(device_id, created_at);
+
+-- Auto-protect rules: when a detection fires, auto-execute actions
+CREATE TABLE IF NOT EXISTS protect_rules (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  org_id          INTEGER REFERENCES orgs(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  event_type      TEXT NOT NULL,
+  condition_json  TEXT NOT NULL DEFAULT '{}',
+  action_type     TEXT NOT NULL DEFAULT 'alert_only',
+  action_payload  TEXT NOT NULL DEFAULT '{}',
+  enabled         INTEGER NOT NULL DEFAULT 1,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Application control policies: whitelist/blacklist apps
+CREATE TABLE IF NOT EXISTS app_policies (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  org_id      INTEGER REFERENCES orgs(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  policy_type TEXT NOT NULL DEFAULT 'blacklist',
+  match_type  TEXT NOT NULL DEFAULT 'path',
+  match_value TEXT NOT NULL,
+  action      TEXT NOT NULL DEFAULT 'alert',
+  enabled     INTEGER NOT NULL DEFAULT 1,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Remote command queue: agent polls this table for pending instructions
+CREATE TABLE IF NOT EXISTS device_commands (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  device_id    INTEGER NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+  org_id       INTEGER REFERENCES orgs(id) ON DELETE CASCADE,
+  command_type TEXT NOT NULL,
+  payload      TEXT NOT NULL DEFAULT '{}',
+  status       TEXT NOT NULL DEFAULT 'pending',
+  result       TEXT NOT NULL DEFAULT '',
+  issued_by    INTEGER REFERENCES users(id),
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  executed_at  TEXT
+) ;
+CREATE INDEX IF NOT EXISTS idx_device_cmds_device ON device_commands(device_id, status);
+
+-- License schema: per-org license tracking
+CREATE TABLE IF NOT EXISTS licenses (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  org_id         INTEGER NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  license_key    TEXT NOT NULL UNIQUE,
+  plan           TEXT NOT NULL DEFAULT 'individu',
+  max_endpoints  INTEGER NOT NULL DEFAULT 5,
+  issued_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at     TEXT,
+  active         INTEGER NOT NULL DEFAULT 1
+);
 `);
+
+// Column migration for pre-existing tables (production DB)
+function addColumnIfMissing(table, col, def) {
+  const exists = db.prepare('PRAGMA table_info(' + table + ')').all().some(function(c) { return c.name === col; });
+  if (!exists) {
+    db.exec('ALTER TABLE ' + table + ' ADD COLUMN ' + col + ' ' + def);
+    console.log('[fortrix] added column ' + col + ' to ' + table);
+  }
+}
+// Existing production licenses table uses different column names; add compatibility
+if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='licenses'").get()) {
+  addColumnIfMissing('licenses', 'max_endpoints', 'INTEGER NOT NULL DEFAULT 5');
+  addColumnIfMissing('licenses', 'active', 'INTEGER NOT NULL DEFAULT 1');
+  addColumnIfMissing('licenses', 'issued_at', "TEXT NOT NULL DEFAULT (datetime('now'))");
+}
+
+// Re-issue the schema block for clean installs
 
 // Column adds for pre-multi-tenant databases (idempotent).
 function hasColumn(table, col) {

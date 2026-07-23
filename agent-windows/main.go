@@ -14,7 +14,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-const agentVersion = "0.3.0"
+const agentVersion = "0.4.0"
 
 // done is closed by the service wrapper to request shutdown.
 var done = make(chan struct{})

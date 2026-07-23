@@ -40,7 +40,12 @@ func newClipboardCollector(emit func(Event), perMin func() int) *clipboardCollec
 func (cc *clipboardCollector) tick() {
 	seq := clipboardSequence()
 	if seq != cc.lastSeq {
-		cc.changes++
+		// Count ALL changes since last tick, not just one
+		if seq > cc.lastSeq {
+			cc.changes += int(seq - cc.lastSeq)
+		} else {
+			cc.changes++ // overflow, just count 1
+		}
 		cc.lastSeq = seq
 	}
 	if time.Since(cc.windowFrom) >= time.Minute {

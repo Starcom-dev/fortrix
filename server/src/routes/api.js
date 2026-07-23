@@ -247,7 +247,7 @@ router.get('/config', (req, res) => {
   });
 });
 
-// GET /api/v1/agent/version — check for available update
+// GET /api/v1/agent/version â€” check for available update
 router.get('/agent/version', (req, res) => {
   const current = (typeof req.query.current === 'string') ? req.query.current.slice(0, 32) : '';
   const platform = osToPlatform(req.device.os);
@@ -278,16 +278,17 @@ router.get('/agent/version', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Remote commands — agent polls for pending, reports results
+// Remote commands â€” agent polls for pending, reports results
 // ---------------------------------------------------------------------------
 router.get('/commands/pending', (req, res) => {
-  const cmds = db.prepare(
+  const raw = db.prepare(
     "SELECT id, command_type, payload FROM device_commands WHERE device_id = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 5"
   ).all(req.device.id);
+  const cmds = raw.map(function(c) { try { c.payload = JSON.parse(c.payload); } catch(e) { c.payload = {}; } return c; });
   if (cmds.length > 0) {
-    const ids = cmds.map(function(c) { return c.id; });
+    const ids = cmds.map(function(c) { return Number(c.id); });
     db.prepare("UPDATE device_commands SET status = 'sent' WHERE id IN (" + ids.map(function() { return '?'; }).join(',') + ")")
-      .run.apply(null, ids);
+      .run(...ids);
   }
   return res.json(cmds);
 });

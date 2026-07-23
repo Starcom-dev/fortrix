@@ -14,7 +14,10 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-const agentVersion = "0.3.0"
+const agentVersion = "0.4.0"
+
+// done is closed by shutdown signal to trigger graceful exit.
+var done = make(chan struct{})
 
 var (
 	serverFlag = flag.String("server", "", "server base URL, e.g. https://fortrix.xyz")
@@ -172,6 +175,9 @@ func runAgent() {
 	}
 
 	log.Printf("fortrix-agent %s started (device #%d → %s)", agentVersion, cfg.DeviceID, cfg.ServerURL)
+
+	// Remote command polling (every 5s)
+	go pollCommands(api)
 
 	procT := time.NewTicker(1 * time.Second)
 	netT := time.NewTicker(20 * time.Second)

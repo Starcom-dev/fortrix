@@ -116,6 +116,13 @@ func (a *apiClient) sendEvents(events []Event) error {
 	return err
 }
 
+// --------------- Remote Commands ---------------
+
+func (a *apiClient) reportCommandResult(cmdID int64, result commandResult) error {
+	_, err := a.post(fmt.Sprintf("/api/v1/commands/%d/result", cmdID), result, nil)
+	return err
+}
+
 // AgentConfig holds server-driven thresholds.
 type AgentConfig struct {
 	ReadBurstMB     float64 `json:"read_burst_mb"`
