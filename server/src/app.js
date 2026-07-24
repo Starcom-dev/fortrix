@@ -61,6 +61,13 @@ app.locals.statusBadge = (status) => ({
 // ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
+// Agent binary downloads (no auth, public)
+app.use('/agent', express.static(path.join(__dirname, '..', 'agent-binaries'), {
+  maxAge: '1d',
+  immutable: true,
+  fallthrough: true,
+}));
+
 app.get('/', (req, res) => res.redirect('/app'));
 app.use('/api/v1', apiRouter);
 app.use('/app', dashboardRouter);
