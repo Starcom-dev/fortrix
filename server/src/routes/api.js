@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { db, getThresholds, getIntervals } = require('../db');
 const { evaluateEvent } = require('../rules');
 const { rateLimit } = require('../rate-limit');
-const { sendAlertEmail } = require('../email');
+const { sendAlertEmail, sendNotificationEmail } = require('../email');
 
 const router = express.Router();
 
@@ -96,6 +96,140 @@ router.post('/lead', (req, res) => {
   `).run(email, name, company, message, ip);
 
   return res.status(201).json({ success: true });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/v1/register  (public; customer self-registration)
+// ---------------------------------------------------------------------------
+const REG_RATE_LIMIT = 3;
+const REG_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const regRate = new Map();
+
+function regRateLimited(ip) {
+  const now = Date.now();
+  const hits = (regRate.get(ip) || []).filter((t) => now - t < REG_RATE_WINDOW_MS);
+  if (hits.length >= REG_RATE_LIMIT) {
+    regRate.set(ip, hits);
+    return true;
+  }
+  hits.push(now);
+  regRate.set(ip, hits);
+  return false;
+}
+
+router.post('/register', (req, res) => {
+  const ip = leadClientIp(req);
+  if (regRateLimited(ip)) {
+    return res.status(429).json({ error: 'rate_limited', message: 'Too many registration attempts. Please try again later.' });
+  }
+
+  const body = req.body || {};
+  const clean = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+  const name = clean(body.name, 128);
+  const email = clean(body.email, 255);
+  const company = clean(body.company, 128) || 'Personal';
+  const password = String(body.password || '');
+
+  // Validate
+  if (!name || name.length < 2) {
+    return res.status(400).json({ error: 'invalid_name', message: 'Please enter your full name.' });
+  }
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    return res.status(400).json({ error: 'invalid_email', message: 'Please enter a valid email address.' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'weak_password', message: 'Password must be at least 8 characters.' });
+  }
+
+  // Check if username (email used as username) already exists
+  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(email);
+  if (existing) {
+    return res.status(409).json({ error: 'duplicate_email', message: 'An account with this email already exists.' });
+  }
+
+  // Check if email already has a lead (skip — not blocking)
+
+  let orgId;
+  let licenseKey;
+  let enrollKey;
+
+  const cryptoRandom = require('crypto');
+  const bcrypt = require('bcryptjs');
+
+  const txn = db.transaction(() => {
+    const passwordHash = bcrypt.hashSync(password, 12);
+
+    // 1. Create org
+    const orgResult = db.prepare('INSERT INTO orgs (name) VALUES (?)').run(company);
+    orgId = orgResult.lastInsertRowid;
+
+    // 2. Create owner user (username = email)
+    db.prepare(
+      'INSERT INTO users (org_id, username, email, password_hash, role, active) VALUES (?, ?, ?, ?, ?, 1)'
+    ).run(orgId, email, email, passwordHash, 'owner');
+
+    // 3. Set default org settings
+    db.prepare('INSERT OR REPLACE INTO org_settings (org_id, key, value) VALUES (?, ?, ?)').run(orgId, 'notify_enabled', '0');
+    db.prepare('INSERT OR REPLACE INTO org_settings (org_id, key, value) VALUES (?, ?, ?)').run(orgId, 'notify_email', email);
+
+    // 4. Create license (Individual plan: 1 endpoint)
+    licenseKey = 'ftx_' + cryptoRandom.randomBytes(16).toString('hex');
+    db.prepare(
+      'INSERT INTO licenses (org_id, license_key, plan, endpoint_quota, max_endpoints, status, active, expires_at) VALUES (?, ?, ?, ?, ?, ?, 1, datetime(?, ?))'
+    ).run(orgId, licenseKey, 'individual', 1, 5, 'active', 'now', '+365 days');
+
+    // 5. Create enroll key
+    enrollKey = 'ftx_' + cryptoRandom.randomBytes(16).toString('hex');
+    db.prepare(
+      'INSERT INTO enroll_keys (org_id, key, label, active) VALUES (?, ?, ?, 1)'
+    ).run(orgId, enrollKey, 'Default — ' + company);
+  });
+
+  try {
+    txn();
+  } catch (err) {
+    console.error('[fortrix] registration failed:', err.message);
+    return res.status(500).json({ error: 'server_error', message: 'Registration failed. Please try again.' });
+  }
+
+  // 6. Send welcome email (fire-and-forget)
+  const welcomeSubject = 'Welcome to Fortrix — Your Endpoint Protection is Ready';
+  const welcomeBody = [
+    `Hi ${name},`,
+    ``,
+    `Welcome to Fortrix! Your account has been created successfully.`,
+    ``,
+    `Dashboard: https://fortrix.xyz/app`,
+    `Username:  ${email}`,
+    ``,
+    `License Key: ${licenseKey}`,
+    `Plan:        Individual (1 endpoint)`,
+    ``,
+    `Getting Started:`,
+    `1. Sign in at https://fortrix.xyz/app`,
+    `2. Download the Fortrix Agent for your devices`,
+    `3. Install the agent using your enroll key: ${enrollKey}`,
+    `4. Your endpoints will appear in the dashboard within seconds`,
+    ``,
+    `Need help? Reply to this email or visit https://fortix.my`,
+    ``,
+    `---`,
+    `Fortrix Endpoint Protection`,
+    `Engineered for world-class security.`,
+  ].join('\n');
+
+  sendNotificationEmail({
+    to: email,
+    subject: welcomeSubject,
+    body: welcomeBody,
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: 'Account created! Check your email for login instructions.',
+    dashboard_url: 'https://fortrix.xyz/app',
+  });
 });
 
 // ---------------------------------------------------------------------------

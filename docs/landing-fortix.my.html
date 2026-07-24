@@ -1,0 +1,488 @@
+﻿<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fortrix ΓÇö Endpoint Protection Platform</title>
+  <link rel="icon" type="image/png" href="/Pavicon.png">
+  <link rel="apple-touch-icon" href="/FORTRIX_Icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#07080E',
+            panel: '#0F101A',
+            panel2: '#14141F',
+            line: 'rgba(255,255,255,0.06)',
+            accent: '#6C5CFF',
+            teal: '#00E5CC',
+            red: '#FF4D6D',
+            amber: '#FFB020',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background: #07080E; font-family: 'Inter', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #07080E; }
+    ::-webkit-scrollbar-thumb { background: #1e2742; border-radius: 8px; }
+  </style>
+</head>
+<body class="bg-ink text-white">
+
+<!-- Nav -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-ink/80 backdrop-blur-xl border-b border-line">
+  <div class="max-w-7xl mx-auto flex items-center justify-between px-8 h-16">
+    <a href="#hero" class="flex items-center gap-2.5">
+      <img src="/FORTRIX_Icon.png" alt="Fortrix" class="w-7 h-7 rounded-lg">
+      <span class="text-white font-semibold text-sm tracking-wide">FORTRIX</span>
+    </a>
+    <div class="hidden md:flex items-center gap-6 text-xs font-medium text-white/60">
+      <a href="#about" class="hover:text-white transition">About</a>
+      <a href="#how" class="hover:text-white transition">Cara Kerja</a>
+      <a href="#users" class="hover:text-white transition">Pengguna</a>
+      <a href="#features" class="hover:text-white transition">Fitur</a>
+      <a href="#pricing" class="hover:text-white transition">Harga</a>
+      <a href="#faq" class="hover:text-white transition">FAQ</a>
+    </div>
+    <a href="#cta" class="hidden md:inline-flex px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-xs font-semibold transition">Mulai Sekarang</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section id="hero" class="pt-32 pb-20 md:pt-40 md:pb-28 px-8">
+  <div class="max-w-7xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent text-[11px] font-semibold mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+      Endpoint Protection Platform
+    </div>
+    <h1 class="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-5">
+      Lindungi Data Anda<br>
+      <span class="bg-gradient-to-r from-accent to-teal bg-clip-text text-transparent">Sebelum Dicuri</span>
+    </h1>
+    <p class="text-white/50 text-base md:text-lg max-w-4xl mx-auto leading-relaxed mb-8">
+      Satu-satunya platform keamanan endpoint dari Indonesia yang mencakup 4 pilar keamanan siber secara menyeluruh: <strong class="text-white/90">Detect</strong> ΓåÆ <strong class="text-white/90">Protect</strong> ΓåÆ <strong class="text-white/90">Respond</strong> ΓåÆ <strong class="text-white/90">Recover</strong>. Dari deteksi pencurian data real-time hingga pemulihan pasca-insiden ΓÇö semuanya dalam satu dashboard.
+    </p>
+    <div class="flex items-center justify-center gap-3">
+      <a href="#cta" class="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition">Request Early Access</a>
+      <a href="#how" class="px-6 py-2.5 rounded-xl border border-white/10 text-white/70 text-sm font-medium hover:bg-white/5 transition">Cara Kerja ΓåÆ</a>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about" class="py-24 px-8 bg-panel/40">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[11px] font-semibold text-accent uppercase tracking-widest">About</span>
+      <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-5">Dibangun untuk Menghentikan<br>Pencurian Data dari Dalam</h2>
+      <p class="text-white/50 text-sm max-w-5xl mx-auto leading-relaxed">
+        Fortrix adalah <strong class="text-white/80">Endpoint Protection Platform</strong> buatan Indonesia yang memantau aktivitas mencurigakan di setiap komputer dalam jaringan Anda. Berbeda dari antivirus tradisional yang fokus pada malware dari luar, Fortrix mendeteksi pola <strong class="text-white/80">data exfiltration</strong> ΓÇö seseorang atau program yang mencoba mencuri data dari dalam.
+      </p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="p-7 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center mb-3 text-accent text-sm font-bold">≡ƒîì</div>
+        <h3 class="text-base font-semibold mb-2">Teknologi Kelas Dunia</h3>
+        <p class="text-white/50 text-sm leading-relaxed">Engine Fortrix digunakan oleh perusahaan cyber security terkemuka di Eropa dan Amerika Serikat. Kini tersedia untuk pasar Indonesia.</p>
+      </div>
+      <div class="p-7 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-8 h-8 rounded-xl bg-red/20 flex items-center justify-center mb-3 text-red text-sm font-bold">ΓÜí</div>
+        <h3 class="text-base font-semibold mb-2">Deteksi Real-time</h3>
+        <p class="text-white/50 text-sm leading-relaxed">Agent ringan memantau setiap endpoint. Deteksi dalam hitungan detik ΓÇö bukan jam.</p>
+      </div>
+      <div class="p-7 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-8 h-8 rounded-xl bg-teal/20 flex items-center justify-center mb-3 text-teal text-sm font-bold">≡ƒöÆ</div>
+        <h3 class="text-base font-semibold mb-2">Privasi Utama</h3>
+        <p class="text-white/50 text-sm leading-relaxed">Hanya metadata & volume yang dikumpulkan. Tidak ada isi file, keystroke, screenshot, atau isi clipboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cara Kerja -->
+<section id="how" class="py-24 px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[11px] font-semibold text-accent uppercase tracking-widest">Cara Kerja</span>
+      <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-5">4 Pilar Keamanan Siber<br>dalam Satu Platform</h2>
+      <p class="text-white/50 text-base max-w-4xl mx-auto">Fortrix bukan sekadar detektor. Kami melindungi, merespons, dan memulihkan ΓÇö siklus keamanan penuh tanpa perlu tools tambahan.</p>
+    </div>
+    <div class="space-y-4">
+      <div class="flex gap-5 items-start p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-12 h-12 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">1</div>
+        <div>
+          <h3 class="text-base font-semibold mb-2"><span class="text-emerald-400">DETECT</span> ΓÇö Deteksi Ancaman Real-time</h3>
+          <p class="text-white/50 text-base leading-relaxed">Agent ringan kami memantau 4 sinyal utama ΓÇö proses mencurigakan, koneksi jaringan keluar, pembacaan file massal, dan clipboard scraping ΓÇö <strong class="text-white/60">setiap detik</strong>. Begitu pola mencurigakan terdeteksi, alert otomatis terkirim ke tim Anda via email.</p>
+        </div>
+      </div>
+      <div class="flex gap-5 items-start p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-12 h-12 shrink-0 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-lg">2</div>
+        <div>
+          <h3 class="text-base font-semibold mb-2"><span class="text-sky-400">PROTECT</span> ΓÇö Cegah Sebelum Parah</h3>
+          <p class="text-white/50 text-base leading-relaxed">Auto-protect rules langsung bertindak saat ancaman terkonfirmasi ΓÇö <strong class="text-white/60">isolasi otomatis</strong> endpoint yang terinfeksi, blokir IP mencurigakan, atau kill proses berbahaya. App whitelist/blacklist memastikan hanya aplikasi tepercaya yang bisa berjalan. <strong class="text-white/60">Anda tidak perlu menunggu tim IT turun tangan.</strong></p>
+        </div>
+      </div>
+      <div class="flex gap-5 items-start p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-12 h-12 shrink-0 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 font-bold text-lg">3</div>
+        <div>
+          <h3 class="text-base font-semibold mb-2"><span class="text-amber-300">RESPOND</span> ΓÇö Tindakan Satu Klik</h3>
+          <p class="text-white/50 text-base leading-relaxed">Dari dashboard, Anda bisa <strong class="text-white/60">isolate network, kill process, atau block IP</strong> hanya dengan satu klik. Tidak perlu remote desktop, tidak perlu command line. Semua tindakan tercatat di audit log ΓÇö siap untuk compliance.</p>
+        </div>
+      </div>
+      <div class="flex gap-5 items-start p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <div class="w-12 h-12 shrink-0 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-lg">4</div>
+        <div>
+          <h3 class="text-base font-semibold mb-2"><span class="text-purple-400">RECOVER</span> ΓÇö Laporan & Pemulihan</h3>
+          <p class="text-white/50 text-base leading-relaxed">Setiap insiden dilengkapi <strong class="text-white/60">Incident Report</strong> profesional dengan kronologi lengkap, event timeline, tindakan yang diambil, dan panduan remediasi langkah-demi-langkah. Export PDF dalam satu klik ΓÇö siap untuk audit, asuransi, atau manajemen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pengguna -->
+<section id="users" class="py-24 px-8 bg-panel/40">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[11px] font-semibold text-accent uppercase tracking-widest">Pengguna</span>
+      <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-5">Siapa yang Menggunakan Fortrix</h2>
+      <p class="text-white/50 text-base max-w-3xl mx-auto">Solusi kami dirancang untuk berbagai skala ΓÇö dari institusi pemerintah hingga individu.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="p-7 rounded-2xl bg-panel2 border border-line">
+        <div class="text-2xl mb-3">≡ƒÅ¢∩╕Å</div>
+        <h3 class="text-base font-semibold mb-2">Pemerintah</h3>
+        <p class="text-white/50 text-sm leading-relaxed mb-3">Lindungi data warga negara, dokumen rahasia, dan sistem pemerintahan dari kebocoran internal. Kepatuhan terhadap UU PDP.</p>
+        <ul class="text-[11px] text-white/30 space-y-1">
+          <li>ΓÇó Instansi pusat & daerah</li>
+          <li>ΓÇó BUMN & BUMD</li>
+          <li>ΓÇó Kementerian & lembaga</li>
+        </ul>
+      </div>
+      <div class="p-7 rounded-2xl bg-panel2 border border-line">
+        <div class="text-2xl mb-3">≡ƒÅó</div>
+        <h3 class="text-base font-semibold mb-2">Perusahaan</h3>
+        <p class="text-white/50 text-sm leading-relaxed mb-3">Amankan kekayaan intelektual, database pelanggan, dan rahasia dagang dari ancaman insider threat.</p>
+        <ul class="text-[11px] text-white/30 space-y-1">
+          <li>ΓÇó Fintech & perbankan</li>
+          <li>ΓÇó E-commerce & retail</li>
+          <li>ΓÇó Manufaktur & logistik</li>
+        </ul>
+      </div>
+      <div class="p-7 rounded-2xl bg-panel2 border border-line">
+        <div class="text-2xl mb-3">≡ƒæñ</div>
+        <h3 class="text-base font-semibold mb-2">Individu</h3>
+        <p class="text-white/50 text-sm leading-relaxed mb-3">Lindungi data pribadi, dokumen penting, dan akun keuangan di laptop atau PC Anda dari akses tidak sah.</p>
+        <ul class="text-[11px] text-white/30 space-y-1">
+          <li>ΓÇó Profesional & freelancer</li>
+          <li>ΓÇó Keluarga & pelajar</li>
+          <li>ΓÇó 1-5 perangkat</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Fitur -->
+<section id="features" class="py-24 px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[11px] font-semibold text-accent uppercase tracking-widest">Fitur</span>
+      <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-5">Semua yang Anda Butuhkan<br>untuk Keamanan Endpoint Modern</h2>
+      <p class="text-white/50 text-base max-w-4xl mx-auto">Dibandingkan membeli 4 tools terpisah, Fortrix memberikan semuanya dalam satu langganan terjangkau.</p>
+    </div>
+
+    <!-- DETECT -->
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">Detect</span>
+        <span class="text-xs text-slate-500">Identifikasi ancaman sebelum terlambat</span>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-emerald-400 text-lg mb-2">≡ƒöì</div>
+          <h3 class="text-base font-semibold mb-2">Process Monitor</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Pantau setiap proses baru yang berjalan. Deteksi proses tidak dikenal dalam 1 detik ΓÇö bukan scanning berkala.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-emerald-400 text-lg mb-2">≡ƒîÉ</div>
+          <h3 class="text-base font-semibold mb-2">Network Monitor</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Lacak semua koneksi keluar. Begitu ada koneksi ke IP mencurigakan atau port tidak dikenal, Anda langsung tahu.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-emerald-400 text-lg mb-2">≡ƒôü</div>
+          <h3 class="text-base font-semibold mb-2">File Exfiltration Detection</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Pantau volume pembacaan file. Jika sebuah proses tiba-tiba membaca 500MB+ file ΓÇö itulah exfiltration. Alert langsung terkirim.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROTECT -->
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="px-3 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-bold uppercase tracking-wider">Protect</span>
+        <span class="text-xs text-slate-500">Cegah otomatis, tanpa intervensi manual</span>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-sky-400 text-lg mb-2">≡ƒ¢í∩╕Å</div>
+          <h3 class="text-base font-semibold mb-2">Auto-Protect Rules</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Aturan otomatis: "Jika exfiltration critical ΓåÆ isolate endpoint". Fortrix bertindak sendiri, Anda tinggal monitor.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-sky-400 text-lg mb-2">Γ£à</div>
+          <h3 class="text-base font-semibold mb-2">Application Whitelist</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Hanya izinkan aplikasi tepercaya berjalan. Blokir semua yang tidak dikenal ΓÇö ransomware, spyware, tool hacking.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-sky-400 text-lg mb-2">≡ƒÜ½</div>
+          <h3 class="text-base font-semibold mb-2">Application Blacklist</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Blokir spesifik: path, hash SHA256, atau digital signature. Begitu proses berbahaya muncul ΓåÆ langsung diblokir.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESPOND -->
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider">Respond</span>
+        <span class="text-xs text-slate-500">Tindakan instan dari dashboard</span>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-amber-300 text-lg mb-2">≡ƒöî</div>
+          <h3 class="text-base font-semibold mb-2">One-Click Isolate</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Satu klik ΓÇö endpoint langsung terisolasi dari jaringan. Hentikan exfiltration dalam detik, dari mana saja.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-amber-300 text-lg mb-2">≡ƒÆÇ</div>
+          <h3 class="text-base font-semibold mb-2">Remote Kill Process</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Matikan proses mencurigakan dari jarak jauh. Tidak perlu SSH, RDP, atau kunjungan fisik ke endpoint.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-amber-300 text-lg mb-2">≡ƒÜ¿</div>
+          <h3 class="text-base font-semibold mb-2">Email Alert Real-time</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Notifikasi instan ke tim keamanan. Tentukan severity minimum ΓÇö critical & high saja, atau semua.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECOVER -->
+    <div class="mb-8">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-400 text-xs font-bold uppercase tracking-wider">Recover</span>
+        <span class="text-xs text-slate-500">Dokumentasi & pemulihan pasca-insiden</span>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-purple-400 text-lg mb-2">≡ƒôä</div>
+          <h3 class="text-base font-semibold mb-2">Incident Report PDF</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Laporan insiden profesional: kronologi lengkap, event timeline, tindakan yang diambil. Siap print atau export ΓÇö bagus untuk audit dan klaim asuransi cyber.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-purple-400 text-lg mb-2">≡ƒôï</div>
+          <h3 class="text-base font-semibold mb-2">Remediation Guide</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Panduan langkah-demi-langkah yang kontekstual. Exfiltration? Isolate ΓåÆ identifikasi proses ΓåÆ kill ΓåÆ reset kredensial. Semua dipandu.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+          <div class="text-purple-400 text-lg mb-2">≡ƒôè</div>
+          <h3 class="text-base font-semibold mb-2">Audit-Ready Log</h3>
+          <p class="text-white/50 text-sm leading-relaxed">Setiap alert, setiap command, setiap tindakan admin tercatat lengkap dengan timestamp. Siap ditunjukkan ke auditor kapan saja.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plus more -->
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <h3 class="text-base font-semibold mb-2">≡ƒûÑ∩╕Å Multi-Platform</h3>
+        <p class="text-white/50 text-sm leading-relaxed">Windows 10/11/Server + macOS 14+. Satu dashboard untuk semua OS. Agent ringan 6.8MB ΓÇö install 1 menit.</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <h3 class="text-base font-semibold mb-2">≡ƒÅó Multi-Tenant RBAC</h3>
+        <p class="text-white/50 text-sm leading-relaxed">Satu dashboard, banyak organisasi. Data terisolasi penuh. 4 role: super admin, owner, admin, analyst.</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-panel2 border border-line hover:border-accent/30 transition">
+        <h3 class="text-base font-semibold mb-2">≡ƒöä Self-Updating Agent</h3>
+        <p class="text-white/50 text-sm leading-relaxed">Agent memperbarui diri sendiri via SHA256 verified update. Tidak perlu IT kirim teknisi ke setiap meja.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Harga -->
+<section id="pricing" class="py-24 px-8 bg-panel/40">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[11px] font-semibold text-accent uppercase tracking-widest">Harga</span>
+      <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-5">Pilih Paket yang Sesuai</h2>
+      <p class="text-white/50 text-sm">Lisensi tahunan. Satu lisensi = satu endpoint. Pilih OS Windows atau macOS saat pembelian.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 max-w-6xl mx-auto">
+      <!-- Individu -->
+      <div class="p-7 rounded-2xl bg-panel2 border border-line">
+        <div class="text-sm text-white/40 mb-1">Individu</div>
+        <div class="text-3xl font-bold mb-1">Rp 500K</div>
+        <div class="text-xs text-white/30 mb-4">/ tahun ┬╖ 1 endpoint</div>
+        <ul class="text-sm text-white/50 space-y-2.5 mb-6">
+          <li>ΓÇó 1 endpoint (Windows/Mac)</li>
+          <li>ΓÇó Semua fitur deteksi</li>
+          <li>ΓÇó Dashboard monitoring</li>
+          <li>ΓÇó 1 akun user</li>
+        </ul>
+        <a href="#cta" class="block text-center px-4 py-2 rounded-xl bg-accent/15 border border-accent/30 text-accent text-xs font-medium hover:bg-accent/20 transition">Pilih Paket</a>
+      </div>
+      <!-- Organisasi -->
+      <div class="p-7 rounded-2xl bg-panel2 border-2 border-accent/40 relative">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-white text-xs font-bold">POPULER</div>
+        <div class="text-xs text-white/40 mb-1 pt-1">Organisasi</div>
+        <div class="text-3xl font-bold mb-1">Rp 2.250K</div>
+        <div class="text-xs text-white/30 mb-4">/ tahun ┬╖ 5 endpoint</div>
+        <ul class="text-sm text-white/50 space-y-2.5 mb-6">
+          <li>ΓÇó Minimal 5 endpoint</li>
+          <li>ΓÇó Pilih OS saat pembelian</li>
+          <li>ΓÇó Dashboard organisasi</li>
+          <li>ΓÇó 5 akun user</li>
+          <li>ΓÇó RBAC (4 role)</li>
+          <li>ΓÇó Notifikasi email</li>
+        </ul>
+        <a href="#cta" class="block text-center px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-white text-xs font-semibold transition">Pilih Paket</a>
+      </div>
+      <!-- Enterprise -->
+      <div class="p-7 rounded-2xl bg-panel2 border border-line">
+        <div class="text-sm text-white/40 mb-1">Enterprise</div>
+        <div class="text-3xl font-bold mb-1">Custom</div>
+        <div class="text-xs text-white/30 mb-4">/ tahun</div>
+        <ul class="text-sm text-white/50 space-y-2.5 mb-6">
+          <li>ΓÇó 50+ endpoint</li>
+          <li>ΓÇó On-premise option</li>
+          <li>ΓÇó Dedicated support</li>
+          <li>ΓÇó Custom integration</li>
+          <li>ΓÇó SLA guarantee</li>
+        </ul>
+        <a href="#cta" class="block text-center px-4 py-2 rounded-xl bg-accent/15 border border-accent/30 text-accent text-xs font-medium hover:bg-accent/20 transition">Hubungi Kami</a>
+      </div>
+    </div>
+    <p class="text-center text-white/30 text-[11px] mt-6">* Harga belum termasuk PPN. Untuk tambahan endpoint di paket Organisasi: Rp 450K/endpoint/tahun.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="py-24 px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[11px] font-semibold text-accent uppercase tracking-widest">FAQ</span>
+      <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-5">Pertanyaan Umum</h2>
+    </div>
+    <div class="space-y-3">
+      <details class="p-5 rounded-2xl bg-panel2 border border-line group">
+        <summary class="text-sm font-medium cursor-pointer list-none flex items-center justify-between">
+          Apakah agent memberatkan komputer?
+          <span class="text-white/30 group-open:rotate-45 transition-transform text-lg">+</span>
+        </summary>
+        <p class="text-white/50 text-sm leading-relaxed mt-3">Tidak. Agent Fortrix sangat ringan (6MB, &lt;1% CPU, ~20MB RAM). Berjalan sebagai background service tanpa mengganggu pekerjaan pengguna.</p>
+      </details>
+      <details class="p-5 rounded-2xl bg-panel2 border border-line group">
+        <summary class="text-sm font-medium cursor-pointer list-none flex items-center justify-between">
+          Apakah Fortrix membaca isi file saya?
+          <span class="text-white/30 group-open:rotate-45 transition-transform text-lg">+</span>
+        </summary>
+        <p class="text-white/50 text-sm leading-relaxed mt-3">Tidak pernah. Fortrix hanya mengukur <strong>volume</strong> data yang dibaca (berapa MB), bukan isinya. Kami tidak mengumpulkan isi file, keystroke, screenshot, atau isi clipboard.</p>
+      </details>
+      <details class="p-5 rounded-2xl bg-panel2 border border-line group">
+        <summary class="text-sm font-medium cursor-pointer list-none flex items-center justify-between">
+          Apakah saya perlu server sendiri?
+          <span class="text-white/30 group-open:rotate-45 transition-transform text-lg">+</span>
+        </summary>
+        <p class="text-white/50 text-sm leading-relaxed mt-3">Tidak harus. Fortrix menyediakan cloud dashboard yang bisa diakses melalui browser. Untuk enterprise, tersedia opsi on-premise ΓÇö server di data center Anda sendiri.</p>
+      </details>
+      <details class="p-5 rounded-2xl bg-panel2 border border-line group">
+        <summary class="text-sm font-medium cursor-pointer list-none flex items-center justify-between">
+          Bagaimana cara mencoba?
+          <span class="text-white/30 group-open:rotate-45 transition-transform text-lg">+</span>
+        </summary>
+        <p class="text-white/50 text-sm leading-relaxed mt-3">Daftar melalui form di bawah. Tim kami akan memberikan akses trial 14 hari ΓÇö tanpa biaya, tanpa kartu kredit. Anda bisa langsung install agent dan melihat dashboard.</p>
+      </details>
+      <details class="p-5 rounded-2xl bg-panel2 border border-line group">
+        <summary class="text-sm font-medium cursor-pointer list-none flex items-center justify-between">
+          Apakah mendukung macOS dan Linux?
+          <span class="text-white/30 group-open:rotate-45 transition-transform text-lg">+</span>
+        </summary>
+        <p class="text-white/50 text-sm leading-relaxed mt-3">Ya. Agent Fortrix tersedia untuk <strong>Windows</strong> (10/11/Server) dan <strong>macOS</strong> (14+). Pilih sistem operasi saat pembelian lisensi.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA + Lead Form -->
+<section id="cta" class="py-24 px-8 bg-gradient-to-b from-transparent to-panel/80">
+  <div class="max-w-3xl mx-auto text-center">
+    <h2 class="text-2xl md:text-3xl font-bold mb-3">Daftar & Mulai Lindungi Data Anda</h2>
+    <p class="text-white/50 text-sm mb-6">Buat akun gratis. Trial 14 hari, tanpa kartu kredit. Langsung dapat akses dashboard.</p>
+    <form id="leadForm" class="space-y-3">
+      <input type="text" name="name" placeholder="Nama" class="w-full bg-panel2 border border-line rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-accent/60" required>
+      <input type="email" name="email" placeholder="Email" class="w-full bg-panel2 border border-line rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-accent/60" required>
+      <input type="text" name="company" placeholder="Perusahaan (opsional)" class="w-full bg-panel2 border border-line rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-accent/60">
+      <input type="password" name="password" placeholder="Password (min. 8 karakter)" minlength="8" class="w-full bg-panel2 border border-line rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-accent/60" required>
+      <button type="submit" class="w-full py-3 rounded-xl bg-teal hover:bg-teal/90 text-black text-sm font-semibold transition">Daftar Sekarang</button>
+    </form>
+    <p id="formMsg" class="hidden mt-4 text-sm text-teal"></p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-10 px-5 border-t border-line">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <img src="/FORTRIX_Icon.png" alt="Fortrix" class="w-5 h-5 rounded">
+      <span class="text-white/30 text-xs">┬⌐ 2026 Fortrix. All rights reserved.</span>
+    </div>
+    <div class="flex items-center gap-6 text-[11px] text-white/30">
+      <a href="mailto:hello@fortrix.site" class="hover:text-white/60 transition">hello@fortrix.site</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Lead form handler
+(function() {
+  var form = document.getElementById('leadForm');
+  var msg = document.getElementById('formMsg');
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = form.querySelector('button');
+    var orig = btn.textContent;
+    btn.textContent = 'Mengirim...';
+    btn.disabled = true;
+    fetch('/api/v1/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name.value,
+        email: form.email.value,
+        company: form.company.value || '',
+        password: form.password.value
+      })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      msg.textContent = 'Terima kasih! Tim kami akan menghubungi Anda dalam 1├ù24 jam.';
+      msg.className = 'mt-4 text-sm text-teal';
+      form.reset();
+    }).catch(function() {
+      if (data && data.message) { msg.innerHTML = data.message; }
+        else { msg.textContent = 'Gagal mendaftar. Silakan coba lagi.'; }
+      msg.className = 'mt-4 text-sm text-red';
+    }).finally(function() {
+      btn.textContent = orig;
+      btn.disabled = false;
+    });
+    return false;
+  });
+})();
+</script>
+</body>
+</html>
