@@ -23,27 +23,27 @@ func killProcessByPID(pid int) commandResult {
 }
 
 func isolateNetwork() commandResult {
-	// Block all outbound traffic except loopback and DNS (port 53)
-	// using Windows Firewall rules.
-	// Outbound block rule
-	out, err := runCmd("netsh", "advfirewall", "firewall", "add", "rule",
-		"name=FortrixIsolate_Out", "dir=out", "action=block",
-		"protocol=any", "remoteport=any")
+	// Block all outbound TCP traffic using Windows Firewall
+	out1, err := runCmd("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=FortrixIsolate_TCP", "dir=out", "action=block",
+		"protocol=tcp")
 	if err != nil {
-		return commandResult{Status: "failed", Result: out}
+		return commandResult{Status: "failed", Result: out1}
 	}
-	// Allow loopback
-	runCmd("netsh", "advfirewall", "firewall", "add", "rule",
-		"name=FortrixIsolate_Loopback", "dir=out", "action=allow",
-		"protocol=any", "remoteip=127.0.0.1")
-	return commandResult{Status: "success", Result: "network isolated (outbound blocked)"}
+	// Block all outbound UDP traffic
+	out2, _ := runCmd("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=FortrixIsolate_UDP", "dir=out", "action=block",
+		"protocol=udp")
+	return commandResult{Status: "success", Result: "network isolated (TCP+UDP outbound blocked)\n" + out1 + "\n" + out2}
 }
 
 func unisolateNetwork() commandResult {
 	// Remove Fortrix isolation rules
-	out1, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Out")
-	out2, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Loopback")
-	combined := out1 + "\n" + out2
+	out1, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_TCP")
+	out2, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_UDP")
+	out3, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Out")
+	out4, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Loopback")
+	combined := out1 + "\n" + out2 + "\n" + out3 + "\n" + out4
 	return commandResult{Status: "success", Result: "network restored\n" + combined}
 }
 
