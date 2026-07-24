@@ -1,4 +1,69 @@
 <!-- Fleet cards -->
+<% if (typeof isCustomerHost !== 'undefined' && isCustomerHost && typeof license !== 'undefined' && license) { %>
+<!-- Customer: License + Setup card -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+  <div class="bg-panel border border-line rounded-2xl p-5">
+    <div class="flex items-center gap-2 mb-3">
+      <i data-lucide="key" class="text-teal" style="width:18px;height:18px;"></i>
+      <span class="text-xs uppercase tracking-widest text-slate-500">Your License</span>
+    </div>
+    <div class="space-y-2">
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Plan</span>
+        <span class="text-white font-semibold capitalize"><%= license.plan %></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Endpoints</span>
+        <span class="text-white"><%= fleet.total %> / <%= license.max_endpoints || 5 %> used</span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Expires</span>
+        <span class="text-white"><%= license.expires_at ? license.expires_at.slice(0, 10) : 'N/A' %></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Status</span>
+        <span class="px-2 py-0.5 rounded-lg bg-teal-500/15 text-teal-400 text-xs font-medium">Active</span>
+      </div>
+    </div>
+  </div>
+  <div class="bg-panel border border-line rounded-2xl p-5">
+    <div class="flex items-center gap-2 mb-3">
+      <i data-lucide="download" class="text-accent" style="width:18px;height:18px;"></i>
+      <span class="text-xs uppercase tracking-widest text-slate-500">Agent Download</span>
+    </div>
+    <p class="text-xs text-slate-400 mb-4">Install Fortrix Agent on each endpoint to start monitoring.</p>
+    <div class="space-y-2">
+      <a href="https://fortrix.xyz/agent/fortrix-agent.exe" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent/15 border border-accent/30 text-accent hover:bg-accent/20 text-xs font-medium transition w-full">
+        <i data-lucide="monitor" style="width:14px;height:14px;"></i> Download for Windows
+      </a>
+      <a href="https://fortrix.xyz/agent/fortrix-agent" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent/15 border border-accent/30 text-accent hover:bg-accent/20 text-xs font-medium transition w-full">
+        <i data-lucide="apple" style="width:14px;height:14px;"></i> Download for macOS (Intel)
+      </a>
+      <a href="https://fortrix.xyz/agent/fortrix-agent-arm64" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent/15 border border-accent/30 text-accent hover:bg-accent/20 text-xs font-medium transition w-full">
+        <i data-lucide="cpu" style="width:14px;height:14px;"></i> Download for macOS (Apple Silicon)
+      </a>
+    </div>
+    <% if (typeof enrollKey !== 'undefined' && enrollKey) { %>
+    <div class="mt-4 p-3 rounded-xl bg-panel2 border border-line">
+      <span class="text-[10px] uppercase tracking-wider text-slate-500">Enroll Key</span>
+      <div class="flex items-center gap-2 mt-1">
+        <code class="text-xs text-white/70 font-mono break-all"><%= enrollKey %></code>
+        <button onclick="navigator.clipboard.writeText('<%= enrollKey %>')" class="text-accent hover:text-white text-xs flex-shrink-0">Copy</button>
+      </div>
+    </div>
+    <% } %>
+    <div class="mt-4 p-3 rounded-xl bg-panel2 border border-line">
+      <span class="text-[10px] uppercase tracking-wider text-slate-500">Quick Setup</span>
+      <ol class="text-xs text-slate-400 mt-2 space-y-1 list-decimal list-inside">
+        <li>Download the agent for your OS</li>
+        <li>Open PowerShell as Administrator</li>
+        <li>Run: <code class="text-white/70">.\fortrix-agent.exe -install -server https://fortrix.xyz -enroll YOUR_KEY</code></li>
+        <li>Agent starts as Windows service automatically</li>
+      </ol>
+    </div>
+  </div>
+</div>
+<% } %>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
   <div class="bg-panel border border-line rounded-2xl p-5">
     <div class="flex items-center justify-between mb-3">

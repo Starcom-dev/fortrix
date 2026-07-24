@@ -68,7 +68,7 @@ function requireAuth(req, res, next) {
   req.org = db.prepare('SELECT * FROM orgs WHERE id = ?').get(orgId) || { id: orgId, name: 'Unknown' };
 
   // View locals (layout sidebar/header).
-  
+
   res.locals.currentOrg = req.org;
   res.locals.roleRank = ROLE_RANK[user.role] || 0;
   res.locals.isSuper = req.isSuper;
@@ -209,6 +209,15 @@ router.get('/', requireAuth, (req, res) => {
     LIMIT 10
   `).all(req.orgId);
 
+  // License info for customer dashboard
+  const license = db.prepare(
+    'SELECT * FROM licenses WHERE org_id = ? AND active = 1 AND status = ? ORDER BY created_at DESC LIMIT 1'
+  ).get(req.orgId, 'active');
+
+  const enrollKey = db.prepare(
+    'SELECT key FROM enroll_keys WHERE org_id = ? AND active = 1 ORDER BY created_at DESC LIMIT 1'
+  ).get(req.orgId);
+
   res.render('overview', {
     title: 'Overview',
     active: 'overview',
@@ -216,6 +225,8 @@ router.get('/', requireAuth, (req, res) => {
     openBySeverity,
     openTotal,
     events24h,
+    license: license || null,
+    enrollKey: enrollKey ? enrollKey.key : null,
     chart: {
       labels: buckets.map((b) => b.slice(11, 16)),
       datasets,
@@ -378,7 +389,7 @@ router.get('/events', requireAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Settings — enroll keys CRUD + thresholds (org-scoped; admin+)
+// Settings - enroll keys CRUD + thresholds (org-scoped; admin+)
 // ---------------------------------------------------------------------------
 router.get('/settings', requireAuth, requireRole('admin'), (req, res) => {
   const keys = db.prepare('SELECT * FROM enroll_keys WHERE org_id = ? ORDER BY created_at DESC, id DESC').all(req.orgId);
@@ -634,7 +645,7 @@ router.get('/audit', requireAuth, requireRole('owner'), (req, res) => {
 
 
 // ---------------------------------------------------------------------------
-// Protect Rules â€” auto-protect configuration
+// Protect Rules â€" auto-protect configuration
 // ---------------------------------------------------------------------------
 router.get("/protect", requireAuth, requireRole("admin"), (req, res) => {
   const rules = db.prepare("SELECT * FROM protect_rules WHERE org_id = ? ORDER BY created_at DESC").all(req.orgId);
@@ -672,7 +683,7 @@ router.post("/protect/:id/delete", requireAuth, requireRole("owner"), (req, res)
 });
 
 // ---------------------------------------------------------------------------
-// Application Control â€” whitelist / blacklist policies
+// Application Control â€" whitelist / blacklist policies
 // ---------------------------------------------------------------------------
 router.get("/app-control", requireAuth, requireRole("admin"), (req, res) => {
   const policies = db.prepare("SELECT * FROM app_policies WHERE org_id = ? ORDER BY created_at DESC").all(req.orgId);
@@ -711,7 +722,7 @@ router.post("/app-control/:id/delete", requireAuth, requireRole("owner"), (req, 
 
 
 // ---------------------------------------------------------------------------
-// Alert Detail â€” full incident view
+// Alert Detail â€" full incident view
 // ---------------------------------------------------------------------------
 router.get("/alerts/:id", requireAuth, (req, res) => {
   const alert = db.prepare(`
@@ -740,7 +751,7 @@ router.get("/alerts/:id", requireAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Incident Report â€” printable / PDF-friendly
+// Incident Report â€" printable / PDF-friendly
 // ---------------------------------------------------------------------------
 router.get("/alerts/:id/report", requireAuth, (req, res) => {
   const alert = db.prepare(`
@@ -784,26 +795,42 @@ router.get("/alerts/:id/report", requireAuth, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Remediation guides â€” mapping alert rules to recommended actions
+// Remediation guides â€" mapping alert rules to recommended actions
 // ---------------------------------------------------------------------------
 function getRemediation(rule) {
   const key = (rule || "").toLowerCase();
+
   if (key.includes("read_burst") || key.includes("fs.read") || key.includes("exfil")) {
     return {
-      summary: "Mass file read detected â€” possible data exfiltration in progress.",
+      summary: "Mass file read detected — possible data exfiltration in progress.",
       steps: [
         "Isolate the endpoint from the network immediately.",
-        "Identify the process responsible â€” check the Events tab for the process name.",
+        "Identify the process responsible — check the Events tab for the process name.",
         "Kill the suspicious process from the device detail page.",
-        "Check what files were accessed â€” review file paths in event data.",
+        "Check what files were accessed — review file paths in event data.",
         "Reset user credentials if sensitive files were involved.",
         "Restore network access only after confirming the threat is neutralized."
       ]
     };
   }
-  if (key.includes("net.outbound") || key.includes("outbound")) {
+
+  if (key.includes("ransomware") || key.includes("delete_burst") || key.includes("write_burst")) {
     return {
-      summary: "Suspicious outbound network connection detected.",
+      summary: "File system anomaly detected — possible ransomware or data destruction.",
+      steps: [
+        "ISOLATE the endpoint IMMEDIATELY — this is time-critical.",
+        "Disconnect from network to prevent spread to shared drives.",
+        "Identify the process responsible and kill it.",
+        "Check backup integrity before restoring any files.",
+        "Do NOT pay any ransom — use backups for recovery.",
+        "Run a full forensic scan on the affected endpoint."
+      ]
+    };
+  }
+
+  if (key.includes("net.outbound") || key.includes("dns_suspicious") || key.includes("connection_burst")) {
+    return {
+      summary: "Suspicious network activity detected.",
       steps: [
         "Block the remote IP from the device detail page.",
         "Identify the process making the connection from Events.",
@@ -813,30 +840,72 @@ function getRemediation(rule) {
       ]
     };
   }
-  if (key.includes("proc.new") || key.includes("suspicious_process")) {
+
+  if (key.includes("proc.new") || key.includes("proc.unsigned") || key.includes("known_tool")) {
     return {
-      summary: "A new or suspicious process was detected on the endpoint.",
+      summary: "A new, unsigned, or potentially malicious process was detected.",
       steps: [
         "Check the process name and path in the event data.",
-        "If unrecognized, kill the process from the device detail page.",
+        "If unrecognized or known-malicious, kill the process immediately.",
         "Check if the process has a valid digital signature.",
         "Add the process hash to the App Control blacklist if confirmed malicious.",
         "Scan the endpoint for additional malware or persistence mechanisms."
       ]
     };
   }
-  if (key.includes("clipboard")) {
+
+  if (key.includes("parent_suspicious") || key.includes("wmi") || key.includes("injection")) {
     return {
-      summary: "Abnormal clipboard activity detected â€” possible clipboard scraping.",
+      summary: "Advanced attack technique detected — script host spawning or code injection.",
       steps: [
-        "Investigate which process is accessing the clipboard.",
-        "Check if any sensitive data may have been in the clipboard.",
-        "Kill the suspicious process if identified.",
-        "Remind users not to copy sensitive data to clipboard.",
-        "Monitor for repeated clipboard alerts from this device."
+        "Isolate the endpoint immediately — this is a strong indicator of compromise.",
+        "Kill the parent process AND the child process.",
+        "Check for other processes spawned by the same parent.",
+        "Review the script content if a script host was involved.",
+        "Run a full malware scan and consider rebuilding the endpoint."
       ]
     };
   }
+
+  if (key.includes("reg.run") || key.includes("startup") || key.includes("service.new") || key.includes("task.scheduled")) {
+    return {
+      summary: "Persistence mechanism detected — malware may survive reboots.",
+      steps: [
+        "Identify the payload that was configured for auto-start.",
+        "Remove the persistence entry (registry key, service, or scheduled task).",
+        "Kill the associated process if currently running.",
+        "Check for other persistence mechanisms on the same endpoint.",
+        "Document the IoC for threat hunting across the fleet."
+      ]
+    };
+  }
+
+  if (key.includes("credential") || key.includes("privilege") || key.includes("escalation")) {
+    return {
+      summary: "Credential theft or privilege escalation attempt detected.",
+      steps: [
+        "Isolate the endpoint immediately to prevent lateral movement.",
+        "Reset passwords for any accounts that may have been compromised.",
+        "Check for newly created admin accounts on the endpoint.",
+        "Review authentication logs for suspicious logins.",
+        "Enable MFA for affected accounts if not already enforced."
+      ]
+    };
+  }
+
+  if (key.includes("clipboard") || key.includes("screenshot") || key.includes("keyboard")) {
+    return {
+      summary: "User activity monitoring alert — possible keylogger or screen capture.",
+      steps: [
+        "Investigate which process is capturing input/screen.",
+        "Check if any sensitive data may have been captured.",
+        "Kill the suspicious process if identified.",
+        "Alert the user not to enter credentials until the endpoint is cleaned.",
+        "Run anti-malware scan to detect and remove keyloggers."
+      ]
+    };
+  }
+
   return {
     summary: "A security alert was triggered. Investigate and respond accordingly.",
     steps: [

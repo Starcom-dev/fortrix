@@ -23,27 +23,42 @@ func killProcessByPID(pid int) commandResult {
 }
 
 func isolateNetwork() commandResult {
-	// Block all outbound TCP traffic using Windows Firewall
+	// Allow Fortrix server communication BEFORE blocking everything else.
+	// This ensures the agent can still receive commands (including unisolate).
+	runCmd("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=FortrixIsolate_Allow_Server", "dir=out", "action=allow",
+		"protocol=tcp", "remoteport=443")
+	runCmd("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=FortrixIsolate_Allow_DNS", "dir=out", "action=allow",
+		"protocol=udp", "remoteport=53")
+	runCmd("netsh", "advfirewall", "firewall", "add", "rule",
+		"name=FortrixIsolate_Allow_Loopback", "dir=out", "action=allow",
+		"remoteip=127.0.0.1")
+
+	// Block all other outbound TCP traffic
 	out1, err := runCmd("netsh", "advfirewall", "firewall", "add", "rule",
 		"name=FortrixIsolate_TCP", "dir=out", "action=block",
 		"protocol=tcp")
 	if err != nil {
 		return commandResult{Status: "failed", Result: out1}
 	}
-	// Block all outbound UDP traffic
+	// Block all other outbound UDP traffic
 	out2, _ := runCmd("netsh", "advfirewall", "firewall", "add", "rule",
 		"name=FortrixIsolate_UDP", "dir=out", "action=block",
 		"protocol=udp")
-	return commandResult{Status: "success", Result: "network isolated (TCP+UDP outbound blocked)\n" + out1 + "\n" + out2}
+	return commandResult{Status: "success", Result: "network isolated (Fortrix server + DNS + loopback allowed, all other TCP/UDP blocked)\n" + out1 + "\n" + out2}
 }
 
 func unisolateNetwork() commandResult {
-	// Remove Fortrix isolation rules
-	out1, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_TCP")
-	out2, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_UDP")
-	out3, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Out")
-	out4, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Loopback")
-	combined := out1 + "\n" + out2 + "\n" + out3 + "\n" + out4
+	// Remove all Fortrix isolation rules (allow + block)
+	out1, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Allow_Server")
+	out2, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Allow_DNS")
+	out3, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Allow_Loopback")
+	out4, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_TCP")
+	out5, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_UDP")
+	out6, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Out")
+	out7, _ := runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=FortrixIsolate_Loopback")
+	combined := out1 + "\n" + out2 + "\n" + out3 + "\n" + out4 + "\n" + out5 + "\n" + out6 + "\n" + out7
 	return commandResult{Status: "success", Result: "network restored\n" + combined}
 }
 

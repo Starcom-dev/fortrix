@@ -18,9 +18,14 @@ func killProcessByPID(pid int) commandResult {
 }
 
 func isolateNetwork() commandResult {
-	// macOS: add temporary pf rule to block all outbound except loopback
-	// Create a temporary anchor
-	pfRules := "block drop out all\npass out quick on lo0\n"
+	// macOS: add pf rules to block all outbound EXCEPT:
+	// - loopback (lo0)
+	// - HTTPS to Fortrix server (port 443)
+	// - DNS (port 53)
+	pfRules := "block drop out all\n" +
+		"pass out quick on lo0\n" +
+		"pass out quick proto tcp to any port 443\n" +
+		"pass out quick proto udp to any port 53\n"
 	if err := os.WriteFile("/tmp/fortrix_pf.rules", []byte(pfRules), 0644); err != nil {
 		return commandResult{Status: "failed", Result: fmt.Sprintf("write rules: %v", err)}
 	}
@@ -33,7 +38,7 @@ func isolateNetwork() commandResult {
 	if err2 != nil && err != nil {
 		return commandResult{Status: "failed", Result: result}
 	}
-	return commandResult{Status: "success", Result: "network isolated (pf enabled)\n" + result}
+	return commandResult{Status: "success", Result: "network isolated (Fortrix server + DNS + loopback allowed)\n" + result}
 }
 
 func unisolateNetwork() commandResult {
